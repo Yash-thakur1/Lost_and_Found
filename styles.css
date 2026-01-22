@@ -2906,3 +2906,395 @@ body {
         height: 50px;
     }
 }
+
+/* ============================================
+   Reward System Styles
+   ============================================ */
+
+/* Reward Badge on Item Cards */
+.item-reward-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+    color: var(--white);
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    box-shadow: 0 2px 10px rgba(245, 158, 11, 0.4);
+    animation: rewardPulse 2s infinite ease-in-out;
+    z-index: 10;
+}
+
+.item-reward-badge i {
+    font-size: 0.7rem;
+}
+
+@keyframes rewardPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Item card with reward highlight */
+.item-card.has-reward {
+    border: 2px solid transparent;
+    background: linear-gradient(var(--white), var(--white)) padding-box,
+                linear-gradient(135deg, #f59e0b, #ef4444) border-box;
+}
+
+.item-card.has-reward:hover {
+    box-shadow: 0 10px 30px rgba(245, 158, 11, 0.2);
+}
+
+.item-action.has-reward-btn {
+    background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+    color: var(--white);
+}
+
+.item-action.has-reward-btn:hover {
+    background: linear-gradient(135deg, #d97706 0%, #dc2626 100%);
+}
+
+/* Reward Section in Report Form */
+.reward-section {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(239, 68, 68, 0.05));
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.reward-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.reward-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.reward-toggle input[type="checkbox"] {
+    display: none;
+}
+
+.toggle-slider {
+    width: 48px;
+    height: 26px;
+    background: var(--gray-300);
+    border-radius: var(--radius-full);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.toggle-slider::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: var(--white);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.reward-toggle input:checked + .toggle-slider {
+    background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+}
+
+.reward-toggle input:checked + .toggle-slider::after {
+    transform: translateX(22px);
+}
+
+.toggle-label {
+    font-weight: 600;
+    color: var(--gray-800);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.toggle-label i {
+    color: #f59e0b;
+}
+
+.reward-hint {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+    font-style: italic;
+}
+
+.reward-fields {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px dashed rgba(245, 158, 11, 0.3);
+}
+
+.reward-input-group {
+    display: flex;
+    gap: 0;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--gray-300);
+    background: var(--white);
+}
+
+.reward-input-group select {
+    border: none;
+    background: var(--gray-100);
+    padding: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--gray-700);
+    border-right: 1px solid var(--gray-300);
+    cursor: pointer;
+    min-width: 90px;
+}
+
+.reward-input-group select:focus {
+    outline: none;
+    background: var(--gray-200);
+}
+
+.reward-input-group input {
+    border: none;
+    padding: 0.75rem 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    flex: 1;
+    min-width: 0;
+}
+
+.reward-input-group input:focus {
+    outline: none;
+}
+
+.reward-input-group input::placeholder {
+    color: var(--gray-400);
+    font-weight: 400;
+}
+
+.reward-options {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.checkbox-group {
+    margin-top: 0.5rem;
+}
+
+.checkbox-group .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--gray-700);
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #f59e0b;
+}
+
+.reward-info-banner {
+    background: rgba(245, 158, 11, 0.1);
+    border-left: 3px solid #f59e0b;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.reward-info-banner i {
+    color: #f59e0b;
+    margin-top: 2px;
+}
+
+.reward-info-banner p {
+    font-size: 0.8rem;
+    color: var(--gray-600);
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Reward Section in Item Detail Modal */
+.item-reward-section {
+    margin: 1rem 0 1.5rem;
+}
+
+.reward-banner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.1));
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.reward-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #f59e0b, #ef4444);
+}
+
+.reward-banner.paid {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.reward-banner.paid::before {
+    background: var(--success);
+}
+
+.reward-banner.claimed {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(14, 165, 233, 0.05));
+    border-color: rgba(14, 165, 233, 0.3);
+}
+
+.reward-banner.claimed::before {
+    background: var(--secondary);
+}
+
+.reward-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.reward-banner.paid .reward-icon {
+    background: var(--success);
+}
+
+.reward-banner.claimed .reward-icon {
+    background: var(--secondary);
+}
+
+.reward-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.reward-label {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.reward-amount {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #f59e0b;
+    line-height: 1.2;
+}
+
+.reward-banner.paid .reward-amount {
+    color: var(--success);
+}
+
+.reward-banner.claimed .reward-amount {
+    color: var(--secondary);
+}
+
+.reward-anonymous-tag {
+    margin-left: auto;
+    background: rgba(0, 0, 0, 0.1);
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    color: var(--gray-600);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.reward-info {
+    font-size: 0.85rem;
+    color: var(--gray-600);
+    margin-top: 0.75rem;
+    text-align: center;
+}
+
+/* Claim Reward Button */
+.btn-reward {
+    background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+    color: var(--white);
+    border: none;
+    padding: 0.875rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-reward:hover {
+    background: linear-gradient(135deg, #d97706 0%, #dc2626 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+
+.btn-reward i {
+    font-size: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .reward-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .reward-hint {
+        margin-left: 0;
+    }
+    
+    .reward-banner {
+        flex-wrap: wrap;
+    }
+    
+    .reward-anonymous-tag {
+        margin-left: 0;
+        margin-top: 0.5rem;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .reward-amount {
+        font-size: 1.5rem;
+    }
+}

@@ -22,7 +22,10 @@ function exec(sql) {
     try {
         return db.exec(sql);
     } catch (error) {
-        console.error('SQL Error:', error.message);
+        // Suppress expected duplicate column errors during migrations
+        if (!error.message.includes('duplicate column name')) {
+            console.error('SQL Error:', error.message);
+        }
         throw error;
     }
 }
@@ -112,12 +115,30 @@ async function initialize() {
             image TEXT,
             user_id INTEGER NOT NULL,
             claimed_by INTEGER,
+            reward_amount REAL DEFAULT 0,
+            reward_currency TEXT DEFAULT 'INR',
+            reward_anonymous INTEGER DEFAULT 0,
+            reward_status TEXT DEFAULT 'none' CHECK(reward_status IN ('none', 'offered', 'claimed', 'paid')),
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id),
             FOREIGN KEY (claimed_by) REFERENCES users(id)
         )
     `);
+
+    // Add reward columns to existing items table if they don't exist
+    try {
+        exec(`ALTER TABLE items ADD COLUMN reward_amount REAL DEFAULT 0`);
+    } catch (e) { /* Column already exists - this is expected */ }
+    try {
+        exec(`ALTER TABLE items ADD COLUMN reward_currency TEXT DEFAULT 'INR'`);
+    } catch (e) { /* Column already exists */ }
+    try {
+        exec(`ALTER TABLE items ADD COLUMN reward_anonymous INTEGER DEFAULT 0`);
+    } catch (e) { /* Column already exists */ }
+    try {
+        exec(`ALTER TABLE items ADD COLUMN reward_status TEXT DEFAULT 'none'`);
+    } catch (e) { /* Column already exists */ }
 
     // Claims table
     exec(`

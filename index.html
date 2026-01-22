@@ -552,6 +552,47 @@
                         </div>
                         <div id="imagePreview" class="image-preview"></div>
                     </div>
+                    
+                    <!-- Reward Section -->
+                    <div class="reward-section" id="rewardSection">
+                        <div class="reward-header">
+                            <label class="reward-toggle">
+                                <input type="checkbox" id="offerReward" onchange="toggleRewardFields()">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label"><i class="fas fa-gift"></i> Offer a Reward</span>
+                            </label>
+                            <span class="reward-hint">Increase your chances of recovery!</span>
+                        </div>
+                        <div class="reward-fields" id="rewardFields" style="display: none;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label><i class="fas fa-rupee-sign"></i> Reward Amount</label>
+                                    <div class="reward-input-group">
+                                        <select id="rewardCurrency">
+                                            <option value="INR">₹ INR</option>
+                                            <option value="USD">$ USD</option>
+                                            <option value="EUR">€ EUR</option>
+                                        </select>
+                                        <input type="number" id="rewardAmount" min="0" step="50" placeholder="500">
+                                    </div>
+                                </div>
+                                <div class="form-group reward-options">
+                                    <label><i class="fas fa-user-secret"></i> Privacy Options</label>
+                                    <div class="checkbox-group">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" id="rewardAnonymous">
+                                            <span>Post anonymously</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="reward-info-banner">
+                                <i class="fas fa-info-circle"></i>
+                                <p>Rewards are paid directly to the finder after successful item recovery. We don't handle payments - you'll coordinate directly with the finder.</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label><i class="fas fa-user"></i> Your Name*</label>

@@ -110,9 +110,15 @@ function createItemCard(item) {
     const icon = categoryIcons[item.category] || 'fa-box';
     const location = locationNames[item.location] || item.location;
     const initials = item.reporter?.name?.split(' ').map(n => n[0]).join('') || '?';
+    const hasReward = item.reward && item.reward.amount > 0;
+    const rewardBadge = hasReward ? `
+        <span class="item-reward-badge">
+            <i class="fas fa-gift"></i> ₹${item.reward.amount}
+        </span>
+    ` : '';
     
     return `
-        <div class="item-card" onclick="openItemDetail(${item.id})">
+        <div class="item-card ${hasReward ? 'has-reward' : ''}" onclick="openItemDetail(${item.id})">
             <div class="item-image">
                 ${item.image ? 
                     `<img src="${item.image}" alt="${item.name}">` : 
@@ -120,6 +126,7 @@ function createItemCard(item) {
                 }
                 <span class="item-status ${item.status}">${item.status}</span>
                 <span class="item-category">${item.category}</span>
+                ${rewardBadge}
             </div>
             <div class="item-content">
                 <h3 class="item-title">${item.name}</h3>
@@ -137,7 +144,7 @@ function createItemCard(item) {
                     <div class="reporter-avatar">${initials}</div>
                     <span class="reporter-name">${item.reporter?.name || 'Anonymous'}</span>
                 </div>
-                <button class="item-action" onclick="event.stopPropagation(); claimItem(${item.id})">
+                <button class="item-action ${hasReward ? 'has-reward-btn' : ''}" onclick="event.stopPropagation(); claimItem(${item.id})">
                     ${item.status === 'lost' ? 'I Found This' : 'This is Mine'}
                 </button>
             </div>
@@ -463,6 +470,26 @@ async function openItemDetail(itemId) {
         
         const icon = categoryIcons[item.category] || 'fa-box';
         const location = locationNames[item.location] || item.location;
+        const hasReward = item.reward && item.reward.amount > 0;
+        const currencySymbol = item.reward?.currency === 'USD' ? '$' : item.reward?.currency === 'EUR' ? '€' : '₹';
+
+        const rewardSection = hasReward ? `
+            <div class="item-reward-section">
+                <div class="reward-banner ${item.reward.status}">
+                    <div class="reward-icon">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    <div class="reward-details">
+                        <span class="reward-label">${item.reward.status === 'paid' ? 'Reward Paid' : item.reward.status === 'claimed' ? 'Reward Claimed' : 'Reward Offered'}</span>
+                        <span class="reward-amount">${currencySymbol}${item.reward.amount}</span>
+                    </div>
+                    ${item.reward.anonymous ? '<span class="reward-anonymous-tag"><i class="fas fa-user-secret"></i> Anonymous</span>' : ''}
+                </div>
+                ${item.reward.status === 'offered' ? `
+                    <p class="reward-info">Help find this item and earn the reward!</p>
+                ` : ''}
+            </div>
+        ` : '';
 
         const detailHTML = `
             <div class="item-detail-image">
@@ -476,6 +503,7 @@ async function openItemDetail(itemId) {
                     <h2 class="item-detail-title">${item.name}</h2>
                     <span class="item-detail-status ${item.status}">${item.status.toUpperCase()}</span>
                 </div>
+                ${rewardSection}
                 <div class="item-detail-info">
                     <div class="info-item">
                         <i class="fas fa-folder"></i>
@@ -533,6 +561,12 @@ async function openItemDetail(itemId) {
                         <i class="fas fa-envelope"></i>
                         Contact Reporter
                     </button>
+                    ${hasReward && item.reward.status === 'offered' ? `
+                        <button class="btn-reward btn-large" onclick="claimReward(${item.id})">
+                            <i class="fas fa-gift"></i>
+                            Claim ${currencySymbol}${item.reward.amount} Reward
+                        </button>
+                    ` : ''}
                 </div>
             </div>
         `;
@@ -613,6 +647,18 @@ async function handleReportSubmit(e) {
     formData.append('dateLostFound', document.getElementById('itemDate').value);
     formData.append('description', document.getElementById('itemDescription').value);
     
+    // Reward fields
+    const offerReward = document.getElementById('offerReward')?.checked;
+    if (offerReward) {
+        const rewardAmount = document.getElementById('rewardAmount')?.value || 0;
+        const rewardCurrency = document.getElementById('rewardCurrency')?.value || 'INR';
+        const rewardAnonymous = document.getElementById('rewardAnonymous')?.checked || false;
+        
+        formData.append('rewardAmount', rewardAmount);
+        formData.append('rewardCurrency', rewardCurrency);
+        formData.append('rewardAnonymous', rewardAnonymous);
+    }
+    
     const imageFile = document.getElementById('itemImage').files[0];
     if (imageFile) {
         formData.append('image', imageFile);
@@ -624,6 +670,14 @@ async function handleReportSubmit(e) {
         closeModal('reportModal');
         e.target.reset();
         document.getElementById('imagePreview').innerHTML = '';
+        
+        // Reset reward fields
+        if (document.getElementById('rewardFields')) {
+            document.getElementById('rewardFields').style.display = 'none';
+        }
+        if (document.getElementById('offerReward')) {
+            document.getElementById('offerReward').checked = false;
+        }
         
         showToast(result.message || 'Item reported successfully!', 'success');
         
@@ -1392,3 +1446,63 @@ window.openModal = function(modalId) {
     }
     originalOpenModal(modalId);
 };
+
+// ============================================
+//  Reward System Functions
+// ============================================
+
+// Toggle reward fields visibility
+function toggleRewardFields() {
+    const checkbox = document.getElementById('offerReward');
+    const fields = document.getElementById('rewardFields');
+    
+    if (checkbox && fields) {
+        fields.style.display = checkbox.checked ? 'block' : 'none';
+        
+        // Focus on amount field when shown
+        if (checkbox.checked) {
+            setTimeout(() => {
+                document.getElementById('rewardAmount')?.focus();
+            }, 100);
+        }
+    }
+}
+
+// Claim reward for an item
+async function claimReward(itemId) {
+    if (!API.Auth.isLoggedIn()) {
+        showToast('Please login to claim a reward', 'error');
+        closeModal('itemModal');
+        openModal('loginModal');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/items/${itemId}/claim-reward`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            },
+            body: JSON.stringify({})
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to claim reward');
+        }
+
+        closeModal('itemModal');
+        showToast(data.message || 'Reward claim submitted!', 'success');
+        
+        // Reload items
+        await loadItems();
+    } catch (error) {
+        showToast(error.message || 'Failed to claim reward', 'error');
+    }
+}
+
+// Make reward functions globally available
+window.toggleRewardFields = toggleRewardFields;
+window.claimReward = claimReward;
