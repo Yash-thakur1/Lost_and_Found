@@ -3298,3 +3298,196 @@ body {
         font-size: 1.5rem;
     }
 }
+
+/* ============================================
+   Archive & Expiry Styles
+   ============================================ */
+
+/* Archive pill in category filter */
+.archive-pill {
+    background: linear-gradient(135deg, var(--gray-500) 0%, var(--gray-600) 100%) !important;
+    border-color: var(--gray-500) !important;
+}
+
+.archive-pill:hover {
+    background: linear-gradient(135deg, var(--gray-600) 0%, var(--gray-700) 100%) !important;
+}
+
+.archive-pill.active {
+    background: linear-gradient(135deg, var(--gray-700) 0%, var(--gray-800) 100%) !important;
+    box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4) !important;
+}
+
+/* Archived item card styling */
+.item-card.archived {
+    opacity: 0.85;
+    border: 2px dashed var(--gray-400);
+}
+
+.item-card.archived .card-badge.archived {
+    background: linear-gradient(135deg, var(--gray-500) 0%, var(--gray-600) 100%);
+}
+
+.item-card.archived:hover {
+    opacity: 1;
+    border-color: var(--gray-500);
+}
+
+/* Archived footer info */
+.archived-date {
+    color: var(--gray-500);
+    font-size: 0.75rem;
+}
+
+/* Expiry warning styling */
+.expiry-warning {
+    color: var(--warning) !important;
+    font-size: 0.75rem !important;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.25rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* Extend button */
+.extend-btn {
+    background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
+    color: var(--white);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    margin-left: 0.5rem;
+}
+
+.extend-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4);
+}
+
+/* Restore button */
+.restore-btn {
+    background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+    color: var(--white);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    margin-left: 0.5rem;
+}
+
+.restore-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
+}
+
+/* My item card actions */
+.my-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Archived item in profile */
+.my-item-card.archived-item {
+    background: rgba(100, 116, 139, 0.1);
+    border-left: 4px solid var(--gray-500);
+}
+
+/* Archived status badge */
+.my-item-status.archived {
+    background: linear-gradient(135deg, var(--gray-500) 0%, var(--gray-600) 100%);
+}
+
+/* Archived header info */
+.archived-header {
+    margin-bottom: 1rem;
+}
+
+.archived-info {
+    background: rgba(100, 116, 139, 0.1);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    color: var(--gray-600);
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.archived-info i {
+    color: var(--gray-500);
+}
+
+/* No items in archive */
+.no-items {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--gray-500);
+}
+
+.no-items i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.no-items h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--gray-600);
+}
+
+.no-items p {
+    color: var(--gray-500);
+}
+
+/* Archive expiry badge on cards */
+.expiry-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
+    color: var(--white);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    z-index: 2;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .my-item-actions {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .extend-btn,
+    .restore-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 0.75rem;
+    }
+}

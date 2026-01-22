@@ -308,6 +308,54 @@ const ContactAPI = {
     }
 };
 
+// ============================================
+//  Archive API
+// ============================================
+
+const ArchiveAPI = {
+    async getSettings() {
+        return await apiRequest('/archive/settings');
+    },
+
+    async getArchivedItems(filters = {}) {
+        const params = new URLSearchParams();
+        if (filters.category) params.append('category', filters.category);
+        if (filters.search) params.append('search', filters.search);
+        if (filters.location) params.append('location', filters.location);
+        if (filters.page) params.append('page', filters.page);
+        if (filters.limit) params.append('limit', filters.limit);
+
+        const queryString = params.toString();
+        return await apiRequest(`/archive/items${queryString ? '?' + queryString : ''}`);
+    },
+
+    async getExpiringItems() {
+        return await apiRequest('/archive/expiring');
+    },
+
+    async extendListing(itemId) {
+        return await apiRequest(`/archive/extend/${itemId}`, {
+            method: 'POST'
+        });
+    },
+
+    async archiveItem(itemId) {
+        return await apiRequest(`/archive/archive/${itemId}`, {
+            method: 'POST'
+        });
+    },
+
+    async unarchiveItem(itemId) {
+        return await apiRequest(`/archive/unarchive/${itemId}`, {
+            method: 'POST'
+        });
+    },
+
+    async getMyArchivedItems() {
+        return await apiRequest('/archive/my-archived');
+    }
+};
+
 // Export all APIs
 window.API = {
     Auth: AuthAPI,
@@ -315,5 +363,6 @@ window.API = {
     Users: UsersAPI,
     Notifications: NotificationsAPI,
     Stats: StatsAPI,
-    Contact: ContactAPI
+    Contact: ContactAPI,
+    Archive: ArchiveAPI
 };

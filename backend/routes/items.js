@@ -8,7 +8,7 @@ const router = express.Router();
 // Get all items with filters
 router.get('/', optionalAuth, (req, res) => {
     try {
-        const { category, status, search, location, page = 1, limit = 12 } = req.query;
+        const { category, status, search, location, page = 1, limit = 12, includeArchived } = req.query;
         const offset = (page - 1) * limit;
 
         let query = `
@@ -21,6 +21,11 @@ router.get('/', optionalAuth, (req, res) => {
             WHERE 1=1
         `;
         const params = [];
+
+        // Exclude archived items by default
+        if (includeArchived !== 'true') {
+            query += ' AND (i.is_archived = 0 OR i.is_archived IS NULL)';
+        }
 
         if (category && category !== 'all') {
             query += ' AND i.category = ?';
@@ -73,6 +78,9 @@ router.get('/', optionalAuth, (req, res) => {
                     name: item.reward_anonymous === 1 ? 'Anonymous' : item.reporter_name,
                     email: item.reward_anonymous === 1 ? null : item.reporter_email
                 },
+                isArchived: item.is_archived === 1,
+                expiresAt: item.expires_at,
+                extensionCount: item.extension_count || 0,
                 createdAt: item.created_at
             })),
             pagination: {
@@ -143,6 +151,9 @@ router.get('/:id', optionalAuth, (req, res) => {
                 claimer: { name: c.claimer_name, email: c.claimer_email },
                 createdAt: c.created_at
             })),
+            isArchived: item.is_archived === 1,
+            expiresAt: item.expires_at,
+            extensionCount: item.extension_count || 0,
             createdAt: item.created_at
         });
     } catch (error) {
@@ -165,10 +176,14 @@ router.post('/', authenticateToken, upload.single('image'), (req, res) => {
         const hasReward = parseFloat(rewardAmount) > 0;
         const rewardStatus = hasReward ? 'offered' : 'none';
 
+        // Calculate expiry date (default 30 days from now)
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 30);
+
         const result = db.prepare(`
-            INSERT INTO items (name, description, category, status, location, date_lost_found, image, user_id, reward_amount, reward_currency, reward_anonymous, reward_status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(name, description, category, status, location, dateLostFound, image, req.user.id, parseFloat(rewardAmount) || 0, rewardCurrency || 'INR', rewardAnonymous === 'true' || rewardAnonymous === true ? 1 : 0, rewardStatus);
+            INSERT INTO items (name, description, category, status, location, date_lost_found, image, user_id, reward_amount, reward_currency, reward_anonymous, reward_status, expires_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(name, description, category, status, location, dateLostFound, image, req.user.id, parseFloat(rewardAmount) || 0, rewardCurrency || 'INR', rewardAnonymous === 'true' || rewardAnonymous === true ? 1 : 0, rewardStatus, expiresAt.toISOString());
 
         // Log activity
         db.prepare(`
@@ -374,9 +389,15 @@ router.put('/claims/:claimId', authenticateToken, (req, res) => {
 // Get user's items
 router.get('/user/my-items', authenticateToken, (req, res) => {
     try {
-        const items = db.prepare(`
-            SELECT * FROM items WHERE user_id = ? ORDER BY created_at DESC
-        `).all(req.user.id);
+        const { includeArchived } = req.query;
+        
+        let query = 'SELECT * FROM items WHERE user_id = ?';
+        if (includeArchived !== 'true') {
+            query += ' AND (is_archived = 0 OR is_archived IS NULL)';
+        }
+        query += ' ORDER BY created_at DESC';
+        
+        const items = db.prepare(query).all(req.user.id);
 
         res.json({
             items: items.map(item => ({
@@ -388,6 +409,10 @@ router.get('/user/my-items', authenticateToken, (req, res) => {
                 location: item.location,
                 dateLostFound: item.date_lost_found,
                 image: item.image ? `/uploads/${item.image}` : null,
+                isArchived: item.is_archived === 1,
+                archivedAt: item.archived_at,
+                expiresAt: item.expires_at,
+                extensionCount: item.extension_count || 0,
                 createdAt: item.created_at
             }))
         });

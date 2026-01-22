@@ -9,6 +9,8 @@ const contactRoutes = require('./routes/contact');
 const notificationRoutes = require('./routes/notifications');
 const statsRoutes = require('./routes/stats');
 const adminRoutes = require('./routes/admin');
+const archiveRoutes = require('./routes/archive');
+const scheduler = require('./scheduler');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,6 +34,7 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/archive', archiveRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -61,6 +64,9 @@ async function startServer() {
         console.log(`🚀 Server is running on http://localhost:${PORT}`);
         console.log(`📦 API available at http://localhost:${PORT}/api`);
         console.log(`🔐 Admin portal at http://localhost:${PORT}/admin.html`);
+        
+        // Start the archive scheduler
+        scheduler.startScheduler(60); // Run every 60 minutes
     });
 }
 

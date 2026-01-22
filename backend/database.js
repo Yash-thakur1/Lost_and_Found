@@ -140,6 +140,47 @@ async function initialize() {
         exec(`ALTER TABLE items ADD COLUMN reward_status TEXT DEFAULT 'none'`);
     } catch (e) { /* Column already exists */ }
 
+    // Add archive columns for auto-expiry system
+    try {
+        exec(`ALTER TABLE items ADD COLUMN is_archived INTEGER DEFAULT 0`);
+    } catch (e) { /* Column already exists */ }
+    try {
+        exec(`ALTER TABLE items ADD COLUMN archived_at DATETIME`);
+    } catch (e) { /* Column already exists */ }
+    try {
+        exec(`ALTER TABLE items ADD COLUMN expires_at DATETIME`);
+    } catch (e) { /* Column already exists */ }
+    try {
+        exec(`ALTER TABLE items ADD COLUMN expiry_notified INTEGER DEFAULT 0`);
+    } catch (e) { /* Column already exists */ }
+    try {
+        exec(`ALTER TABLE items ADD COLUMN extension_count INTEGER DEFAULT 0`);
+    } catch (e) { /* Column already exists */ }
+
+    // Archive settings table
+    exec(`
+        CREATE TABLE IF NOT EXISTS archive_settings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            setting_key TEXT UNIQUE NOT NULL,
+            setting_value TEXT NOT NULL,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    // Insert default archive settings if not exist
+    const defaultSettings = [
+        ['auto_archive_days', '30'],
+        ['expiry_warning_days', '7'],
+        ['max_extensions', '2'],
+        ['extension_days', '30']
+    ];
+    
+    defaultSettings.forEach(([key, value]) => {
+        try {
+            db.run(`INSERT OR IGNORE INTO archive_settings (setting_key, setting_value) VALUES (?, ?)`, [key, value]);
+        } catch (e) { /* Already exists */ }
+    });
+
     // Claims table
     exec(`
         CREATE TABLE IF NOT EXISTS claims (

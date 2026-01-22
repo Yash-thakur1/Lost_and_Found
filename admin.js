@@ -79,6 +79,10 @@ function setupEventListeners() {
     document.getElementById('userForm')?.addEventListener('submit', handleUserForm);
     document.getElementById('adminProfileForm')?.addEventListener('submit', handleAdminProfile);
     document.getElementById('adminPasswordForm')?.addEventListener('submit', handleAdminPassword);
+    document.getElementById('archiveSettingsForm')?.addEventListener('submit', saveArchiveSettings);
+    
+    // Archive search
+    document.getElementById('archiveSearch')?.addEventListener('input', debounce(loadArchivedItemsAdmin, 300));
     
     // Avatar upload listener
     setupAvatarUploadListener();
@@ -200,6 +204,9 @@ function loadSectionData(section) {
             break;
         case 'items':
             loadItems();
+            break;
+        case 'archive':
+            loadArchiveSection();
             break;
         case 'users':
             loadUsers();
@@ -1113,4 +1120,235 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
     };
+}
+
+// ============================================
+//  Archive Management Functions
+// ============================================
+
+let selectedArchivedItems = [];
+
+async function loadArchiveSection() {
+    await Promise.all([
+        loadArchiveStats(),
+        loadArchiveSettings(),
+        loadArchivedItemsAdmin()
+    ]);
+}
+
+async function loadArchiveStats() {
+    try {
+        const stats = await adminFetch('/archive-stats');
+        
+        document.getElementById('archivedCount').textContent = stats.archived || 0;
+        document.getElementById('activeCount').textContent = stats.active || 0;
+        document.getElementById('expiringCount').textContent = stats.expiringSoon || 0;
+        document.getElementById('old30Count').textContent = stats.oldItems?.over30Days || 0;
+        document.getElementById('old60Count').textContent = stats.oldItems?.over60Days || 0;
+        document.getElementById('old90Count').textContent = stats.oldItems?.over90Days || 0;
+    } catch (error) {
+        console.error('Error loading archive stats:', error);
+    }
+}
+
+async function loadArchiveSettings() {
+    try {
+        const data = await adminFetch('/archive-settings');
+        const settings = data.settings || {};
+        
+        document.getElementById('autoArchiveDays').value = settings.auto_archive_days || 30;
+        document.getElementById('expiryWarningDays').value = settings.expiry_warning_days || 7;
+        document.getElementById('maxExtensions').value = settings.max_extensions || 2;
+        document.getElementById('extensionDays').value = settings.extension_days || 30;
+    } catch (error) {
+        console.error('Error loading archive settings:', error);
+    }
+}
+
+async function saveArchiveSettings(e) {
+    e.preventDefault();
+    
+    try {
+        await adminFetch('/archive-settings', {
+            method: 'PUT',
+            body: JSON.stringify({
+                auto_archive_days: parseInt(document.getElementById('autoArchiveDays').value),
+                expiry_warning_days: parseInt(document.getElementById('expiryWarningDays').value),
+                max_extensions: parseInt(document.getElementById('maxExtensions').value),
+                extension_days: parseInt(document.getElementById('extensionDays').value)
+            })
+        });
+        
+        showToast('Archive settings saved successfully', 'success');
+    } catch (error) {
+        showToast(error.message, 'error');
+    }
+}
+
+async function loadArchivedItemsAdmin() {
+    const tbody = document.getElementById('archivedTableBody');
+    const search = document.getElementById('archiveSearch')?.value || '';
+    
+    try {
+        const params = new URLSearchParams();
+        if (search) params.append('search', search);
+        
+        const data = await adminFetch(`/archived-items?${params}`);
+        
+        if (!data.items || data.items.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty">No archived items found</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = data.items.map(item => `
+            <tr data-id="${item.id}">
+                <td><input type="checkbox" class="archived-checkbox" value="${item.id}" onchange="updateArchivedSelection()"></td>
+                <td>
+                    <div class="item-cell">
+                        ${item.image ? `<img src="/uploads/${item.image}" alt="${escapeHtml(item.name)}" class="item-thumb">` : '<div class="item-thumb no-image"><i class="fas fa-image"></i></div>'}
+                        <span>${escapeHtml(item.name)}</span>
+                    </div>
+                </td>
+                <td><span class="badge">${capitalize(item.category)}</span></td>
+                <td>${escapeHtml(item.reporterName) || 'Unknown'}</td>
+                <td>${formatDate(item.created_at)}</td>
+                <td>${formatDate(item.archived_at)}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn-icon success" onclick="restoreSingleItem(${item.id})" title="Restore">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                        <button class="btn-icon danger" onclick="deleteArchivedItem(${item.id})" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="7" class="error">Error loading archived items</td></tr>`;
+        console.error('Error loading archived items:', error);
+    }
+}
+
+function toggleSelectAllArchived() {
+    const selectAll = document.getElementById('selectAllArchived');
+    const checkboxes = document.querySelectorAll('.archived-checkbox');
+    
+    checkboxes.forEach(cb => cb.checked = selectAll.checked);
+    updateArchivedSelection();
+}
+
+function updateArchivedSelection() {
+    const checkboxes = document.querySelectorAll('.archived-checkbox:checked');
+    selectedArchivedItems = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    
+    const bulkActions = document.getElementById('archiveBulkActions');
+    const countSpan = document.getElementById('selectedArchivedCount');
+    
+    if (selectedArchivedItems.length > 0) {
+        bulkActions.style.display = 'flex';
+        countSpan.textContent = `${selectedArchivedItems.length} item${selectedArchivedItems.length > 1 ? 's' : ''} selected`;
+    } else {
+        bulkActions.style.display = 'none';
+    }
+}
+
+async function restoreSingleItem(itemId) {
+    try {
+        await adminFetch('/bulk-archive', {
+            method: 'POST',
+            body: JSON.stringify({
+                itemIds: [itemId],
+                action: 'unarchive'
+            })
+        });
+        
+        showToast('Item restored successfully', 'success');
+        loadArchiveStats();
+        loadArchivedItemsAdmin();
+    } catch (error) {
+        showToast(error.message, 'error');
+    }
+}
+
+async function bulkRestoreItems() {
+    if (selectedArchivedItems.length === 0) return;
+    
+    try {
+        await adminFetch('/bulk-archive', {
+            method: 'POST',
+            body: JSON.stringify({
+                itemIds: selectedArchivedItems,
+                action: 'unarchive'
+            })
+        });
+        
+        showToast(`${selectedArchivedItems.length} items restored successfully`, 'success');
+        selectedArchivedItems = [];
+        loadArchiveStats();
+        loadArchivedItemsAdmin();
+    } catch (error) {
+        showToast(error.message, 'error');
+    }
+}
+
+async function deleteArchivedItem(itemId) {
+    document.getElementById('confirmMessage').textContent = 'Are you sure you want to permanently delete this archived item?';
+    document.getElementById('confirmBtn').textContent = 'Delete';
+    document.getElementById('confirmBtn').onclick = async () => {
+        try {
+            await adminFetch(`/items/${itemId}`, { method: 'DELETE' });
+            closeAdminModal('confirmModal');
+            showToast('Item deleted successfully', 'success');
+            loadArchiveStats();
+            loadArchivedItemsAdmin();
+        } catch (error) {
+            showToast(error.message, 'error');
+        }
+    };
+    openAdminModal('confirmModal');
+}
+
+async function bulkDeleteArchivedItems() {
+    if (selectedArchivedItems.length === 0) return;
+    
+    document.getElementById('confirmMessage').textContent = `Are you sure you want to permanently delete ${selectedArchivedItems.length} archived item(s)?`;
+    document.getElementById('confirmBtn').textContent = 'Delete All';
+    document.getElementById('confirmBtn').onclick = async () => {
+        try {
+            for (const itemId of selectedArchivedItems) {
+                await adminFetch(`/items/${itemId}`, { method: 'DELETE' });
+            }
+            closeAdminModal('confirmModal');
+            showToast(`${selectedArchivedItems.length} items deleted successfully`, 'success');
+            selectedArchivedItems = [];
+            loadArchiveStats();
+            loadArchivedItemsAdmin();
+        } catch (error) {
+            showToast(error.message, 'error');
+        }
+    };
+    openAdminModal('confirmModal');
+}
+
+async function bulkArchiveByAge(days) {
+    document.getElementById('confirmMessage').textContent = `This will archive all items older than ${days} days. Continue?`;
+    document.getElementById('confirmBtn').textContent = 'Archive';
+    document.getElementById('confirmBtn').onclick = async () => {
+        try {
+            const result = await adminFetch('/auto-archive', {
+                method: 'POST',
+                body: JSON.stringify({ days })
+            });
+            closeAdminModal('confirmModal');
+            showToast(result.message, 'success');
+            loadArchiveStats();
+            loadArchivedItemsAdmin();
+            loadDashboardData();
+        } catch (error) {
+            showToast(error.message, 'error');
+        }
+    };
+    openAdminModal('confirmModal');
 }

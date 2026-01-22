@@ -663,4 +663,241 @@ router.delete('/clear-old', adminAuth, (req, res) => {
     }
 });
 
+// ============================================
+//  Archive Management
+// ============================================
+
+// Get archived items
+router.get('/archived-items', adminAuth, (req, res) => {
+    try {
+        const db = req.app.get('db');
+        const { search, category } = req.query;
+
+        let sql = `
+            SELECT items.*, users.name as reporterName 
+            FROM items 
+            LEFT JOIN users ON items.user_id = users.id
+            WHERE items.is_archived = 1
+        `;
+
+        if (search) {
+            sql += ` AND (items.name LIKE '%${search.replace(/'/g, "''")}%' OR items.description LIKE '%${search.replace(/'/g, "''")}%')`;
+        }
+        if (category) {
+            sql += ` AND items.category = '${category.replace(/'/g, "''")}'`;
+        }
+
+        sql += ' ORDER BY items.archived_at DESC';
+
+        const items = runQuery(db, sql);
+        res.json({ items });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Bulk archive items
+router.post('/bulk-archive', adminAuth, (req, res) => {
+    try {
+        const db = req.app.get('db');
+        const { itemIds, action } = req.body; // action: 'archive' or 'unarchive'
+
+        if (!Array.isArray(itemIds) || itemIds.length === 0) {
+            return res.status(400).json({ error: 'No items specified' });
+        }
+
+        const ids = itemIds.join(',');
+        let updatedCount = 0;
+
+        if (action === 'archive') {
+            db.run(`
+                UPDATE items 
+                SET is_archived = 1, 
+                    archived_at = datetime('now'),
+                    updated_at = datetime('now')
+                WHERE id IN (${ids}) AND (is_archived = 0 OR is_archived IS NULL)
+            `);
+            
+            // Log activity
+            db.run(`
+                INSERT INTO activity_log (type, message, created_at)
+                VALUES ('bulk_archive', 'Admin bulk archived ${itemIds.length} items', datetime('now'))
+            `);
+        } else if (action === 'unarchive') {
+            // Calculate new expiry (30 days from now)
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + 30);
+            
+            db.run(`
+                UPDATE items 
+                SET is_archived = 0, 
+                    archived_at = NULL,
+                    expires_at = '${expiryDate.toISOString()}',
+                    extension_count = 0,
+                    expiry_notified = 0,
+                    updated_at = datetime('now')
+                WHERE id IN (${ids}) AND is_archived = 1
+            `);
+            
+            // Log activity
+            db.run(`
+                INSERT INTO activity_log (type, message, created_at)
+                VALUES ('bulk_unarchive', 'Admin bulk restored ${itemIds.length} items from archive', datetime('now'))
+            `);
+        }
+
+        saveDatabase(req.app);
+        res.json({ 
+            message: `Successfully ${action === 'archive' ? 'archived' : 'restored'} ${itemIds.length} items`,
+            count: itemIds.length
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Auto-archive by age
+router.post('/auto-archive', adminAuth, (req, res) => {
+    try {
+        const db = req.app.get('db');
+        const { days } = req.body; // Number of days (30, 60, 90)
+
+        if (!days || ![30, 60, 90].includes(parseInt(days))) {
+            return res.status(400).json({ error: 'Invalid days. Must be 30, 60, or 90.' });
+        }
+
+        // Get count of items to archive
+        const countResult = db.exec(`
+            SELECT COUNT(*) as count FROM items 
+            WHERE created_at < datetime('now', '-${days} days')
+            AND (is_archived = 0 OR is_archived IS NULL)
+            AND status NOT IN ('claimed', 'returned')
+        `);
+        const count = countResult[0]?.values[0]?.[0] || 0;
+
+        if (count === 0) {
+            return res.json({ message: 'No items to archive', count: 0 });
+        }
+
+        // Archive items older than specified days
+        db.run(`
+            UPDATE items 
+            SET is_archived = 1, 
+                archived_at = datetime('now'),
+                updated_at = datetime('now')
+            WHERE created_at < datetime('now', '-${days} days')
+            AND (is_archived = 0 OR is_archived IS NULL)
+            AND status NOT IN ('claimed', 'returned')
+        `);
+
+        // Log activity
+        db.run(`
+            INSERT INTO activity_log (type, message, created_at)
+            VALUES ('auto_archive', 'Admin archived ${count} items older than ${days} days', datetime('now'))
+        `);
+
+        saveDatabase(req.app);
+        res.json({ 
+            message: `Successfully archived ${count} items older than ${days} days`,
+            count
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get archive settings
+router.get('/archive-settings', adminAuth, (req, res) => {
+    try {
+        const db = req.app.get('db');
+        const settings = runQuery(db, 'SELECT * FROM archive_settings');
+        
+        const settingsObj = {};
+        settings.forEach(s => {
+            settingsObj[s.setting_key] = parseInt(s.setting_value) || s.setting_value;
+        });
+
+        res.json({ settings: settingsObj });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Update archive settings
+router.put('/archive-settings', adminAuth, (req, res) => {
+    try {
+        const db = req.app.get('db');
+        const { auto_archive_days, expiry_warning_days, max_extensions, extension_days } = req.body;
+
+        if (auto_archive_days) {
+            db.run(`UPDATE archive_settings SET setting_value = '${auto_archive_days}', updated_at = datetime('now') WHERE setting_key = 'auto_archive_days'`);
+        }
+        if (expiry_warning_days) {
+            db.run(`UPDATE archive_settings SET setting_value = '${expiry_warning_days}', updated_at = datetime('now') WHERE setting_key = 'expiry_warning_days'`);
+        }
+        if (max_extensions) {
+            db.run(`UPDATE archive_settings SET setting_value = '${max_extensions}', updated_at = datetime('now') WHERE setting_key = 'max_extensions'`);
+        }
+        if (extension_days) {
+            db.run(`UPDATE archive_settings SET setting_value = '${extension_days}', updated_at = datetime('now') WHERE setting_key = 'extension_days'`);
+        }
+
+        saveDatabase(req.app);
+        res.json({ message: 'Archive settings updated successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get archive statistics
+router.get('/archive-stats', adminAuth, (req, res) => {
+    try {
+        const db = req.app.get('db');
+
+        const archivedCount = runQuery(db, 'SELECT COUNT(*) as count FROM items WHERE is_archived = 1', false)?.count || 0;
+        const activeCount = runQuery(db, 'SELECT COUNT(*) as count FROM items WHERE is_archived = 0 OR is_archived IS NULL', false)?.count || 0;
+        const expiringCount = runQuery(db, `
+            SELECT COUNT(*) as count FROM items 
+            WHERE expires_at IS NOT NULL 
+            AND julianday(expires_at) - julianday('now') <= 7
+            AND julianday(expires_at) - julianday('now') > 0
+            AND (is_archived = 0 OR is_archived IS NULL)
+        `, false)?.count || 0;
+        
+        const oldItems30 = runQuery(db, `
+            SELECT COUNT(*) as count FROM items 
+            WHERE created_at < datetime('now', '-30 days')
+            AND (is_archived = 0 OR is_archived IS NULL)
+            AND status NOT IN ('claimed', 'returned')
+        `, false)?.count || 0;
+        
+        const oldItems60 = runQuery(db, `
+            SELECT COUNT(*) as count FROM items 
+            WHERE created_at < datetime('now', '-60 days')
+            AND (is_archived = 0 OR is_archived IS NULL)
+            AND status NOT IN ('claimed', 'returned')
+        `, false)?.count || 0;
+        
+        const oldItems90 = runQuery(db, `
+            SELECT COUNT(*) as count FROM items 
+            WHERE created_at < datetime('now', '-90 days')
+            AND (is_archived = 0 OR is_archived IS NULL)
+            AND status NOT IN ('claimed', 'returned')
+        `, false)?.count || 0;
+
+        res.json({
+            archived: archivedCount,
+            active: activeCount,
+            expiringSoon: expiringCount,
+            oldItems: {
+                over30Days: oldItems30,
+                over60Days: oldItems60,
+                over90Days: oldItems90
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;

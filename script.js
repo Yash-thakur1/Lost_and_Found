@@ -960,21 +960,73 @@ async function loadMyItems() {
             return;
         }
 
-        container.innerHTML = data.items.map(item => `
-            <div class="my-item-card" onclick="openItemDetail(${item.id}); closeModal('profileModal');">
-                <div class="my-item-icon">
-                    <i class="fas ${categoryIcons[item.category] || 'fa-box'}"></i>
+        container.innerHTML = data.items.map(item => {
+            const expiryInfo = getExpiryInfo(item.expiresAt);
+            return `
+                <div class="my-item-card" onclick="openItemDetail(${item.id}); closeModal('profileModal');">
+                    <div class="my-item-icon">
+                        <i class="fas ${categoryIcons[item.category] || 'fa-box'}"></i>
+                    </div>
+                    <div class="my-item-info">
+                        <h4>${item.name}</h4>
+                        <p>${locationNames[item.location] || item.location} • ${formatDate(item.dateLostFound)}</p>
+                        ${expiryInfo.isExpiringSoon ? `<p class="expiry-warning"><i class="fas fa-clock"></i> Expires in ${expiryInfo.daysLeft} day${expiryInfo.daysLeft !== 1 ? 's' : ''}</p>` : ''}
+                    </div>
+                    <div class="my-item-actions">
+                        <span class="my-item-status ${item.status}">${item.status}</span>
+                        ${expiryInfo.isExpiringSoon && expiryInfo.canExtend ? `<button class="extend-btn" onclick="event.stopPropagation(); extendListing(${item.id})" title="Extend listing"><i class="fas fa-clock"></i></button>` : ''}
+                    </div>
                 </div>
-                <div class="my-item-info">
-                    <h4>${item.name}</h4>
-                    <p>${locationNames[item.location] || item.location} • ${formatDate(item.dateLostFound)}</p>
-                </div>
-                <span class="my-item-status ${item.status}">${item.status}</span>
-            </div>
-        `).join('');
+            `;
+        }).join('');
+        
+        // Also load expiring items notification
+        loadExpiringItems();
     } catch (error) {
         console.error('Error loading items:', error);
         container.innerHTML = '<p class="error">Failed to load your items</p>';
+    }
+}
+
+// Helper function to get expiry info
+function getExpiryInfo(expiresAt) {
+    if (!expiresAt) {
+        return { isExpiringSoon: false, daysLeft: null, canExtend: true };
+    }
+    
+    const now = new Date();
+    const expiry = new Date(expiresAt);
+    const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+    
+    return {
+        isExpiringSoon: daysLeft <= 7 && daysLeft > 0,
+        daysLeft,
+        canExtend: true // This will be updated by the API
+    };
+}
+
+// Load items expiring soon
+async function loadExpiringItems() {
+    try {
+        const data = await API.Archive.getExpiringItems();
+        
+        if (data.items && data.items.length > 0) {
+            // Show notification badge or toast
+            showToast(`${data.items.length} item(s) expiring soon. Check your profile to extend.`, 'warning');
+        }
+    } catch (error) {
+        console.error('Error loading expiring items:', error);
+    }
+}
+
+// Extend item listing
+async function extendListing(itemId) {
+    try {
+        const data = await API.Archive.extendListing(itemId);
+        showToast(data.message, 'success');
+        loadMyItems(); // Refresh the list
+    } catch (error) {
+        showToast(error.message || 'Failed to extend listing', 'error');
     }
 }
 
@@ -1032,7 +1084,147 @@ function switchProfileTab(tabName) {
         loadMyItems();
     } else if (tabName === 'claims') {
         loadMyClaims();
+    } else if (tabName === 'archived') {
+        loadMyArchivedItems();
     }
+}
+
+// Load user's archived items
+async function loadMyArchivedItems() {
+    const container = document.getElementById('myArchivedList');
+    
+    try {
+        const data = await API.Archive.getMyArchivedItems();
+        
+        if (!data.items || data.items.length === 0) {
+            container.innerHTML = `
+                <div class="no-items-message">
+                    <i class="fas fa-archive"></i>
+                    <p>No archived items</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = data.items.map(item => `
+            <div class="my-item-card archived-item">
+                <div class="my-item-icon">
+                    <i class="fas ${categoryIcons[item.category] || 'fa-box'}"></i>
+                </div>
+                <div class="my-item-info">
+                    <h4>${item.name}</h4>
+                    <p>${locationNames[item.location] || item.location} • Archived ${formatDate(item.archivedAt)}</p>
+                </div>
+                <div class="my-item-actions">
+                    <span class="my-item-status archived">Archived</span>
+                    <button class="restore-btn" onclick="event.stopPropagation(); restoreItem(${item.id})" title="Restore item">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading archived items:', error);
+        container.innerHTML = '<p class="error">Failed to load archived items</p>';
+    }
+}
+
+// Restore archived item
+async function restoreItem(itemId) {
+    try {
+        const data = await API.Archive.unarchiveItem(itemId);
+        showToast(data.message, 'success');
+        loadMyArchivedItems(); // Refresh the list
+    } catch (error) {
+        showToast(error.message || 'Failed to restore item', 'error');
+    }
+}
+
+// Archive view toggle
+let isArchiveView = false;
+
+function toggleArchiveView() {
+    isArchiveView = !isArchiveView;
+    
+    // Update button state
+    const archivePill = document.querySelector('.archive-pill');
+    if (archivePill) {
+        archivePill.classList.toggle('active', isArchiveView);
+    }
+    
+    // Update other pills
+    if (isArchiveView) {
+        document.querySelectorAll('.pill:not(.archive-pill)').forEach(pill => {
+            pill.classList.remove('active');
+        });
+    } else {
+        document.querySelector('.pill[data-category="all"]')?.classList.add('active');
+    }
+    
+    // Reload items
+    if (isArchiveView) {
+        loadArchivedItems();
+    } else {
+        loadItems();
+    }
+}
+
+// Load archived items for public browsing
+async function loadArchivedItems() {
+    const grid = document.getElementById('itemsGrid');
+    grid.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading archived items...</div>';
+    
+    try {
+        const data = await API.Archive.getArchivedItems();
+        
+        if (!data.items || data.items.length === 0) {
+            grid.innerHTML = `
+                <div class="no-items">
+                    <i class="fas fa-archive"></i>
+                    <h3>No Archived Items</h3>
+                    <p>There are no archived items to display.</p>
+                </div>
+            `;
+            return;
+        }
+
+        grid.innerHTML = data.items.map(item => createArchivedItemCard(item)).join('');
+    } catch (error) {
+        console.error('Error loading archived items:', error);
+        grid.innerHTML = '<p class="error">Failed to load archived items</p>';
+    }
+}
+
+// Create archived item card
+function createArchivedItemCard(item) {
+    return `
+        <div class="item-card archived" onclick="openItemDetail(${item.id})">
+            <div class="card-image">
+                ${item.image ? 
+                    `<img src="${item.image}" alt="${item.name}" loading="lazy">` : 
+                    `<div class="no-image"><i class="fas ${categoryIcons[item.category] || 'fa-box'}"></i></div>`
+                }
+                <span class="card-badge archived"><i class="fas fa-archive"></i> Archived</span>
+                <span class="card-category">${item.category}</span>
+            </div>
+            <div class="card-content">
+                <h3>${item.name}</h3>
+                <p class="card-description">${item.description.substring(0, 80)}...</p>
+                <div class="card-meta">
+                    <span><i class="fas fa-map-marker-alt"></i> ${locationNames[item.location] || item.location}</span>
+                    <span><i class="fas fa-calendar"></i> ${formatDate(item.dateLostFound)}</span>
+                </div>
+                <div class="card-footer">
+                    <span class="reporter">
+                        <i class="fas fa-user"></i> ${item.reporter?.name || 'Anonymous'}
+                    </span>
+                    <span class="archived-date">
+                        <i class="fas fa-archive"></i> Archived ${formatDate(item.archivedAt)}
+                    </span>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 async function handleProfileUpdate(e) {

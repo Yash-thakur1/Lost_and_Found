@@ -147,6 +147,7 @@
                 <button class="pill" data-category="clothing"><i class="fas fa-tshirt"></i> Clothing</button>
                 <button class="pill" data-category="keys"><i class="fas fa-key"></i> Keys</button>
                 <button class="pill" data-category="bags"><i class="fas fa-shopping-bag"></i> Bags</button>
+                <button class="pill archive-pill" data-category="archived" onclick="toggleArchiveView()"><i class="fas fa-archive"></i> Browse Archive</button>
             </div>
 
             <!-- Items Grid -->
@@ -743,6 +744,9 @@
                     <button class="profile-tab" data-tab="claims" onclick="switchProfileTab('claims')">
                         <i class="fas fa-hand-paper"></i> My Claims
                     </button>
+                    <button class="profile-tab" data-tab="archived" onclick="switchProfileTab('archived')">
+                        <i class="fas fa-archive"></i> Archived
+                    </button>
                     <button class="profile-tab" data-tab="settings" onclick="switchProfileTab('settings')">
                         <i class="fas fa-cog"></i> Settings
                     </button>
@@ -806,6 +810,16 @@
                 <div class="profile-tab-content" id="tab-claims">
                     <div class="my-claims-list" id="myClaimsList">
                         <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading your claims...</div>
+                    </div>
+                </div>
+
+                <!-- Archived Items Tab -->
+                <div class="profile-tab-content" id="tab-archived">
+                    <div class="archived-header">
+                        <p class="archived-info"><i class="fas fa-info-circle"></i> Items are automatically archived after 30 days. You can restore them here.</p>
+                    </div>
+                    <div class="my-items-list" id="myArchivedList">
+                        <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading archived items...</div>
                     </div>
                 </div>
 

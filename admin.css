@@ -977,6 +977,148 @@ body {
 }
 
 /* ============================================
+   Archive Management Styles
+   ============================================ */
+
+.archive-overview h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    color: var(--gray-800);
+}
+
+.archive-overview h2 i {
+    color: var(--primary);
+}
+
+.archive-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.archive-stat.warning .stat-icon {
+    background: linear-gradient(135deg, var(--warning), #d97706);
+}
+
+.archive-actions-card,
+.archive-settings-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.archive-actions-card h3,
+.archive-settings-card h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--gray-800);
+}
+
+.archive-actions-card p {
+    color: var(--gray-500);
+    margin-bottom: 1rem;
+}
+
+.archive-action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.btn-archive {
+    background: linear-gradient(135deg, var(--gray-600), var(--gray-700));
+    color: var(--white);
+    border: none;
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--radius);
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-archive:hover {
+    background: linear-gradient(135deg, var(--gray-700), var(--gray-800));
+    transform: translateY(-2px);
+}
+
+.btn-archive .badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.125rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.75rem;
+}
+
+.settings-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.bulk-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--gray-100);
+    border-radius: var(--radius);
+    margin-top: 1rem;
+}
+
+.bulk-actions span {
+    font-weight: 500;
+    color: var(--gray-700);
+}
+
+.btn-success {
+    background: var(--success);
+    color: var(--white);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.btn-success:hover {
+    background: #16a34a;
+}
+
+.item-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius);
+    object-fit: cover;
+}
+
+.item-thumb.no-image {
+    background: var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray-400);
+}
+
+.item-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* ============================================
    Responsive Design
    ============================================ */
 
