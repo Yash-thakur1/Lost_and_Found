@@ -19,8 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function checkAdminAuth() {
-    adminToken = localStorage.getItem('adminToken');
-    adminUser = JSON.parse(localStorage.getItem('adminUser') || 'null');
+    adminToken = sessionStorage.getItem('adminToken');
+    adminUser = JSON.parse(sessionStorage.getItem('adminUser') || 'null');
 
     if (adminToken && adminUser) {
         showDashboard();
@@ -109,8 +109,8 @@ async function handleAdminLogin(e) {
 
         adminToken = data.token;
         adminUser = data.admin;
-        localStorage.setItem('adminToken', adminToken);
-        localStorage.setItem('adminUser', JSON.stringify(adminUser));
+        sessionStorage.setItem('adminToken', adminToken);
+        sessionStorage.setItem('adminUser', JSON.stringify(adminUser));
 
         showDashboard();
         loadDashboardData();
@@ -121,8 +121,8 @@ async function handleAdminLogin(e) {
 }
 
 function adminLogout() {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminUser');
+    sessionStorage.removeItem('adminToken');
+    sessionStorage.removeItem('adminUser');
     adminToken = null;
     adminUser = null;
     showLoginPage();
@@ -945,7 +945,7 @@ async function handleAdminProfile(e) {
         });
 
         adminUser.name = name;
-        localStorage.setItem('adminUser', JSON.stringify(adminUser));
+        sessionStorage.setItem('adminUser', JSON.stringify(adminUser));
         document.getElementById('adminName').textContent = name;
 
         showToast('Profile updated successfully', 'success');

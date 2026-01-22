@@ -4,30 +4,31 @@
 
 const API_BASE_URL = '/api';
 
-// Token management
+// Token management - Using sessionStorage for per-tab sessions
+// This allows different users to be logged in across different browser tabs/windows
 function getToken() {
-    return localStorage.getItem('authToken');
+    return sessionStorage.getItem('authToken');
 }
 
 function setToken(token) {
-    localStorage.setItem('authToken', token);
+    sessionStorage.setItem('authToken', token);
 }
 
 function removeToken() {
-    localStorage.removeItem('authToken');
+    sessionStorage.removeItem('authToken');
 }
 
 function getUser() {
-    const user = localStorage.getItem('currentUser');
+    const user = sessionStorage.getItem('currentUser');
     return user ? JSON.parse(user) : null;
 }
 
 function setUser(user) {
-    localStorage.setItem('currentUser', JSON.stringify(user));
+    sessionStorage.setItem('currentUser', JSON.stringify(user));
 }
 
 function removeUser() {
-    localStorage.removeItem('currentUser');
+    sessionStorage.removeItem('currentUser');
 }
 
 // API request helper

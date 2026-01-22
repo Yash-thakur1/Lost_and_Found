@@ -890,7 +890,7 @@ async function loadProfile() {
         const data = await API.Auth.getProfile();
         
         // Update stored user data with latest from server
-        localStorage.setItem('currentUser', JSON.stringify(data.user));
+        sessionStorage.setItem('currentUser', JSON.stringify(data.user));
         
         // Update profile header
         document.getElementById('profileName').textContent = data.user.name;
@@ -1052,7 +1052,7 @@ async function handleProfileUpdate(e) {
         if (currentUser) {
             currentUser.name = formData.name;
             currentUser.phone = formData.phone;
-            localStorage.setItem('user', JSON.stringify(currentUser));
+            sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
         }
         
         updateAuthUI();
@@ -1354,7 +1354,7 @@ async function handleProfilePictureUpload(e) {
         const response = await fetch('/api/users/profile', {
             method: 'PUT',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                'Authorization': `Bearer ${sessionStorage.getItem('authToken')}`
             },
             body: formData
         });
@@ -1366,7 +1366,7 @@ async function handleProfilePictureUpload(e) {
         }
         
         // Update stored user data
-        localStorage.setItem('currentUser', JSON.stringify(data.user));
+        sessionStorage.setItem('currentUser', JSON.stringify(data.user));
         
         // Update avatar in UI immediately
         const modal = document.getElementById('profileModal');
@@ -1482,7 +1482,7 @@ async function claimReward(itemId) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                'Authorization': `Bearer ${sessionStorage.getItem('authToken')}`
             },
             body: JSON.stringify({})
         });
