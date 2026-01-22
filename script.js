@@ -286,7 +286,11 @@ function setupEventListeners() {
     const imageInput = document.getElementById('itemImage');
     
     if (uploadArea && imageInput) {
-        uploadArea.addEventListener('click', () => imageInput.click());
+        uploadArea.addEventListener('click', (e) => {
+            // Don't trigger if clicking on buttons
+            if (e.target.closest('.btn-upload-option')) return;
+            imageInput.click();
+        });
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
             uploadArea.style.borderColor = 'var(--primary)';
@@ -831,13 +835,42 @@ async function loadProfile() {
     try {
         const data = await API.Auth.getProfile();
         
+        // Update stored user data with latest from server
+        localStorage.setItem('currentUser', JSON.stringify(data.user));
+        
         // Update profile header
         document.getElementById('profileName').textContent = data.user.name;
         document.getElementById('profileEmail').textContent = data.user.email;
         
-        // Update avatar with initials
-        const initials = data.user.name.split(' ').map(n => n[0]).join('').toUpperCase();
-        document.getElementById('profileAvatar').innerHTML = initials;
+        // Update avatar - show image if available, otherwise show initials
+        const profileAvatar = document.getElementById('profileAvatar');
+        const avatarImg = document.getElementById('profileAvatarImg');
+        const avatarIcon = document.getElementById('profileAvatarIcon');
+        
+        if (data.user.avatar) {
+            // Show profile picture
+            if (avatarImg) {
+                avatarImg.src = data.user.avatar;
+                avatarImg.style.display = 'block';
+                avatarImg.style.width = '100%';
+                avatarImg.style.height = '100%';
+                avatarImg.style.objectFit = 'cover';
+                avatarImg.style.borderRadius = '50%';
+            }
+            if (avatarIcon) avatarIcon.style.display = 'none';
+        } else {
+            // Show initials as fallback
+            const initials = data.user.name.split(' ').map(n => n[0]).join('').toUpperCase();
+            if (avatarImg) avatarImg.style.display = 'none';
+            if (avatarIcon) {
+                avatarIcon.style.display = 'flex';
+                avatarIcon.className = '';  // Remove fa-user class
+                avatarIcon.textContent = initials;
+                avatarIcon.style.fontSize = '1.5rem';
+                avatarIcon.style.fontWeight = 'bold';
+                avatarIcon.style.fontFamily = 'Poppins, sans-serif';
+            }
+        }
         
         // Update form fields
         document.getElementById('editName').value = data.user.name || '';
@@ -1036,3 +1069,326 @@ window.filterItems = filterItems;
 window.handleNotificationClick = handleNotificationClick;
 window.switchProfileTab = switchProfileTab;
 window.handleLogout = handleLogout;
+window.openCameraCapture = openCameraCapture;
+window.closeCameraCapture = closeCameraCapture;
+window.switchCamera = switchCamera;
+window.capturePhoto = capturePhoto;
+window.usePhoto = usePhoto;
+window.retakePhoto = retakePhoto;
+
+// ============================================
+//  Camera Capture Functionality
+// ============================================
+
+let cameraStream = null;
+let currentFacingMode = 'environment'; // 'user' for front camera, 'environment' for back
+let capturedImageBlob = null;
+
+async function openCameraCapture() {
+    const modal = document.getElementById('cameraModal');
+    const video = document.getElementById('cameraVideo');
+    
+    try {
+        // Check if camera is available
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showToast('Camera not supported on this device', 'error');
+            return;
+        }
+        
+        openModal('cameraModal');
+        
+        // Request camera access
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: currentFacingMode,
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            },
+            audio: false
+        });
+        
+        video.srcObject = cameraStream;
+        
+        // Reset UI
+        document.getElementById('cameraVideo').style.display = 'block';
+        document.getElementById('cameraPreview').style.display = 'none';
+        document.getElementById('captureBtn').style.display = 'inline-flex';
+        document.getElementById('switchCameraBtn').style.display = 'inline-flex';
+        document.getElementById('usePhotoBtn').style.display = 'none';
+        document.getElementById('retakeBtn').style.display = 'none';
+        
+    } catch (error) {
+        console.error('Camera error:', error);
+        closeCameraCapture();
+        
+        if (error.name === 'NotAllowedError') {
+            showToast('Camera permission denied. Please allow camera access.', 'error');
+        } else if (error.name === 'NotFoundError') {
+            showToast('No camera found on this device', 'error');
+        } else {
+            showToast('Could not access camera', 'error');
+        }
+    }
+}
+
+function closeCameraCapture() {
+    // Stop camera stream
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+    }
+    
+    closeModal('cameraModal');
+    capturedImageBlob = null;
+}
+
+async function switchCamera() {
+    // Toggle facing mode
+    currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+    
+    // Stop current stream
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+    }
+    
+    const video = document.getElementById('cameraVideo');
+    
+    try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: currentFacingMode,
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            },
+            audio: false
+        });
+        
+        video.srcObject = cameraStream;
+    } catch (error) {
+        console.error('Switch camera error:', error);
+        showToast('Could not switch camera', 'error');
+    }
+}
+
+function capturePhoto() {
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('cameraCanvas');
+    const preview = document.getElementById('cameraPreview');
+    const capturedImg = document.getElementById('capturedImage');
+    
+    // Set canvas size to video size
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // Draw video frame to canvas
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    
+    // Convert to blob
+    canvas.toBlob((blob) => {
+        capturedImageBlob = blob;
+        capturedImg.src = URL.createObjectURL(blob);
+        
+        // Show preview, hide video
+        video.style.display = 'none';
+        preview.style.display = 'block';
+        
+        // Update buttons
+        document.getElementById('captureBtn').style.display = 'none';
+        document.getElementById('switchCameraBtn').style.display = 'none';
+        document.getElementById('usePhotoBtn').style.display = 'inline-flex';
+        document.getElementById('retakeBtn').style.display = 'inline-flex';
+    }, 'image/jpeg', 0.9);
+}
+
+function retakePhoto() {
+    const video = document.getElementById('cameraVideo');
+    const preview = document.getElementById('cameraPreview');
+    
+    // Show video, hide preview
+    video.style.display = 'block';
+    preview.style.display = 'none';
+    
+    // Update buttons
+    document.getElementById('captureBtn').style.display = 'inline-flex';
+    document.getElementById('switchCameraBtn').style.display = 'inline-flex';
+    document.getElementById('usePhotoBtn').style.display = 'none';
+    document.getElementById('retakeBtn').style.display = 'none';
+    
+    capturedImageBlob = null;
+}
+
+function usePhoto() {
+    if (!capturedImageBlob) {
+        showToast('No photo captured', 'error');
+        return;
+    }
+    
+    // Create a File object from the blob
+    const file = new File([capturedImageBlob], 'camera-photo.jpg', { type: 'image/jpeg' });
+    
+    // Set the file to the image input
+    const imageInput = document.getElementById('itemImage');
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    imageInput.files = dataTransfer.files;
+    
+    // Show preview
+    handleImageUpload([file]);
+    
+    // Close camera modal
+    closeCameraCapture();
+    
+    showToast('Photo added successfully!', 'success');
+}
+
+// ============================================
+//  Profile Picture Upload
+// ============================================
+
+// Initialize profile picture upload listener
+function initProfilePictureUpload() {
+    const profilePictureInput = document.getElementById('profilePictureInput');
+    
+    if (profilePictureInput) {
+        // Remove any existing listener first
+        profilePictureInput.removeEventListener('change', handleProfilePictureUpload);
+        profilePictureInput.addEventListener('change', handleProfilePictureUpload);
+    }
+}
+
+// Call on DOMContentLoaded
+document.addEventListener('DOMContentLoaded', initProfilePictureUpload);
+
+async function handleProfilePictureUpload(e) {
+    const file = e.target.files[0];
+    
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        showToast('Please select an image file', 'error');
+        return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('Image size should be less than 5MB', 'error');
+        return;
+    }
+    
+    // Check if user is logged in
+    if (!API.Auth.isLoggedIn()) {
+        showToast('Please login first', 'error');
+        return;
+    }
+    
+    try {
+        showToast('Uploading profile picture...', 'info');
+        
+        const formData = new FormData();
+        formData.append('avatar', file);
+        
+        // Get current profile data
+        const user = API.Auth.getCurrentUser();
+        if (user) {
+            formData.append('name', user.name || '');
+            if (user.phone) formData.append('phone', user.phone);
+            if (user.studentId) formData.append('studentId', user.studentId);
+        }
+        
+        const response = await fetch('/api/users/profile', {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            },
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to upload profile picture');
+        }
+        
+        // Update stored user data
+        localStorage.setItem('currentUser', JSON.stringify(data.user));
+        
+        // Update avatar in UI immediately
+        const modal = document.getElementById('profileModal');
+        const imgElement = modal ? modal.querySelector('#profileAvatarImg') : null;
+        const iconElement = modal ? modal.querySelector('#profileAvatarIcon') : null;
+        
+        if (data.user && data.user.avatar && imgElement) {
+            imgElement.src = data.user.avatar;
+            imgElement.style.display = 'block';
+            imgElement.style.width = '100%';
+            imgElement.style.height = '100%';
+            imgElement.style.objectFit = 'cover';
+            imgElement.style.borderRadius = '50%';
+            
+            if (iconElement) {
+                iconElement.style.display = 'none';
+            }
+        }
+        
+        showToast('Profile picture updated!', 'success');
+        
+    } catch (error) {
+        console.error('Profile picture upload error:', error);
+        showToast(error.message || 'Failed to upload profile picture', 'error');
+    }
+    
+    // Reset the file input so the same file can be selected again
+    e.target.value = '';
+}
+
+// Update profile avatar display when profile modal opens
+function updateProfileAvatar() {
+    const user = API.Auth.getCurrentUser();
+    if (!user) return;
+    
+    const profileModal = document.getElementById('profileModal');
+    if (!profileModal) return;
+    
+    const avatarImg = profileModal.querySelector('#profileAvatarImg');
+    const avatarIcon = profileModal.querySelector('#profileAvatarIcon');
+    
+    if (user.avatar) {
+        // Show profile picture
+        if (avatarImg) {
+            avatarImg.src = user.avatar;
+            avatarImg.style.display = 'block';
+            avatarImg.style.width = '100%';
+            avatarImg.style.height = '100%';
+            avatarImg.style.objectFit = 'cover';
+            avatarImg.style.borderRadius = '50%';
+        }
+        if (avatarIcon) avatarIcon.style.display = 'none';
+    } else {
+        // Show initials as fallback
+        const initials = user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
+        if (avatarImg) avatarImg.style.display = 'none';
+        if (avatarIcon) {
+            avatarIcon.style.display = 'flex';
+            avatarIcon.className = '';
+            avatarIcon.textContent = initials;
+            avatarIcon.style.fontSize = '1.5rem';
+            avatarIcon.style.fontWeight = 'bold';
+            avatarIcon.style.fontFamily = 'Poppins, sans-serif';
+        }
+    }
+    
+    // Re-init profile picture upload listener
+    initProfilePictureUpload();
+}
+
+// Override openModal to update profile avatar when profile modal opens
+const originalOpenModal = window.openModal;
+window.openModal = function(modalId) {
+    if (modalId === 'profileModal') {
+        // Small delay to ensure modal is rendered
+        setTimeout(updateProfileAvatar, 50);
+    }
+    originalOpenModal(modalId);
+};

@@ -95,7 +95,7 @@ router.post('/login', async (req, res) => {
                 email: user.email,
                 studentId: user.student_id,
                 phone: user.phone,
-                avatar: user.avatar
+                avatar: user.avatar ? `/uploads/${user.avatar}` : null
             },
             token
         });
@@ -134,7 +134,7 @@ router.get('/me', authenticateToken, (req, res) => {
                 email: user.email,
                 studentId: user.student_id,
                 phone: user.phone,
-                avatar: user.avatar,
+                avatar: user.avatar ? `/uploads/${user.avatar}` : null,
                 createdAt: user.created_at
             },
             stats: itemsCount

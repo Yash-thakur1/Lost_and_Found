@@ -29,7 +29,6 @@
                 <li><a href="#browse">Browse Items</a></li>
                 <li><a href="#report">Report Item</a></li>
                 <li><a href="#stats">Statistics</a></li>
-                <li><a href="#contact">Contact</a></li>
             </ul>
             <div class="nav-actions">
                 <button class="btn-search" id="searchBtn" onclick="scrollToSection('browse'); document.getElementById('quickSearchInput')?.focus();">
@@ -38,6 +37,9 @@
                 <button class="btn-notification" id="notificationBtn">
                     <i class="fas fa-bell"></i>
                     <span class="notification-badge">3</span>
+                </button>
+                <button class="btn-contact" onclick="openModal('contactModal')" title="Contact Us">
+                    <i class="fas fa-envelope"></i>
                 </button>
                 <button class="btn-primary" onclick="openModal('loginModal')">
                     <i class="fas fa-user"></i> Login
@@ -337,9 +339,14 @@
     </section>
 
     <!-- Contact Section -->
-    <section id="contact" class="contact-section">
-        <div class="container">
-            <div class="contact-wrapper">
+    <!-- Contact Modal -->
+    <div class="modal" id="contactModal">
+        <div class="modal-overlay" onclick="closeModal('contactModal')"></div>
+        <div class="modal-content modal-large">
+            <button class="modal-close" onclick="closeModal('contactModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="contact-modal-wrapper">
                 <div class="contact-info">
                     <span class="section-badge">Contact</span>
                     <h2>Get In Touch</h2>
@@ -412,7 +419,7 @@
                 </div>
             </div>
         </div>
-    </section>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">
@@ -432,6 +439,7 @@
                         <li><a href="#browse">Browse Items</a></li>
                         <li><a href="#" onclick="openModal('reportModal')">Report Item</a></li>
                         <li><a href="#stats">Statistics</a></li>
+                        <li><a href="#" onclick="openModal('contactModal')">Contact Us</a></li>
                     </ul>
                 </div>
                 <div class="footer-links">
@@ -532,6 +540,14 @@
                         <div class="image-upload-area" id="imageUploadArea">
                             <i class="fas fa-cloud-upload-alt"></i>
                             <p>Drag & drop an image or click to browse</p>
+                            <div class="upload-buttons">
+                                <button type="button" class="btn-upload-option" onclick="document.getElementById('itemImage').click()">
+                                    <i class="fas fa-folder-open"></i> Browse Files
+                                </button>
+                                <button type="button" class="btn-upload-option btn-camera" onclick="openCameraCapture()">
+                                    <i class="fas fa-camera"></i> Take Photo
+                                </button>
+                            </div>
                             <input type="file" id="itemImage" accept="image/*" hidden>
                         </div>
                         <div id="imagePreview" class="image-preview"></div>
@@ -659,8 +675,15 @@
             </button>
             <div class="profile-container">
                 <div class="profile-header">
-                    <div class="profile-avatar" id="profileAvatar">
-                        <i class="fas fa-user"></i>
+                    <div class="profile-avatar-wrapper">
+                        <div class="profile-avatar" id="profileAvatar">
+                            <img id="profileAvatarImg" src="" alt="" style="display: none;">
+                            <i class="fas fa-user" id="profileAvatarIcon"></i>
+                        </div>
+                        <label class="avatar-upload-btn" for="profilePictureInput" title="Change Profile Picture">
+                            <i class="fas fa-camera"></i>
+                        </label>
+                        <input type="file" id="profilePictureInput" accept="image/*" hidden>
                     </div>
                     <h2 id="profileName">User Name</h2>
                     <p id="profileEmail">user@campus.edu</p>
@@ -783,6 +806,40 @@
         </div>
         <div class="notification-list" id="notificationList">
             <!-- Notifications loaded dynamically -->
+        </div>
+    </div>
+
+    <!-- Camera Capture Modal -->
+    <div class="modal" id="cameraModal">
+        <div class="modal-overlay" onclick="closeCameraCapture()"></div>
+        <div class="modal-content modal-medium">
+            <button class="modal-close" onclick="closeCameraCapture()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-header">
+                <h2><i class="fas fa-camera"></i> Take Photo</h2>
+            </div>
+            <div class="camera-container">
+                <video id="cameraVideo" autoplay playsinline></video>
+                <canvas id="cameraCanvas" style="display: none;"></canvas>
+                <div id="cameraPreview" class="camera-preview" style="display: none;">
+                    <img id="capturedImage" src="" alt="Captured">
+                </div>
+            </div>
+            <div class="camera-controls">
+                <button type="button" class="btn-secondary" id="switchCameraBtn" onclick="switchCamera()">
+                    <i class="fas fa-sync-alt"></i> Switch
+                </button>
+                <button type="button" class="btn-capture" id="captureBtn" onclick="capturePhoto()" title="Capture">
+                    <i class="fas fa-camera"></i>
+                </button>
+                <button type="button" class="btn-primary" id="usePhotoBtn" onclick="usePhoto()" style="display: none;">
+                    <i class="fas fa-check"></i> Use Photo
+                </button>
+                <button type="button" class="btn-secondary" id="retakeBtn" onclick="retakePhoto()" style="display: none;">
+                    <i class="fas fa-redo"></i> Retake
+                </button>
+            </div>
         </div>
     </div>
 

@@ -8,6 +8,7 @@ const userRoutes = require('./routes/users');
 const contactRoutes = require('./routes/contact');
 const notificationRoutes = require('./routes/notifications');
 const statsRoutes = require('./routes/stats');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,6 +31,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -51,9 +53,14 @@ app.use((err, req, res, next) => {
 async function startServer() {
     await db.initialize();
     
+    // Make database available to routes
+    app.set('db', db.getDb());
+    app.set('saveDatabase', db.saveDatabase);
+    
     app.listen(PORT, () => {
         console.log(`🚀 Server is running on http://localhost:${PORT}`);
         console.log(`📦 API available at http://localhost:${PORT}/api`);
+        console.log(`🔐 Admin portal at http://localhost:${PORT}/admin.html`);
     });
 }
 

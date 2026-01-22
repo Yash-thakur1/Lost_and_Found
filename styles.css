@@ -252,6 +252,24 @@ body {
     transform: scale(1.05);
 }
 
+.btn-contact {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-full);
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--white);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.btn-contact:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
 .notification-badge {
     position: absolute;
     top: -2px;
@@ -1202,6 +1220,21 @@ body {
     display: grid;
     grid-template-columns: 1fr 1.2fr;
     gap: 2.5rem;
+}
+
+/* Contact Modal Wrapper */
+.contact-modal-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 2rem;
+    padding: 1rem;
+}
+
+@media (max-width: 768px) {
+    .contact-modal-wrapper {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
 }
 
 .contact-info .section-badge {
@@ -2377,7 +2410,13 @@ body {
     margin-bottom: 1rem;
 }
 
-.profile-avatar {
+.profile-header .profile-avatar-wrapper {
+    display: inline-block;
+    position: relative;
+    margin-bottom: 0.75rem;
+}
+
+.profile-header .profile-avatar {
     width: 75px;
     height: 75px;
     border-radius: 50%;
@@ -2385,10 +2424,54 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 0.75rem;
     font-size: 2rem;
     color: var(--white);
     border: 3px solid rgba(255, 255, 255, 0.3);
+    overflow: hidden;
+    position: relative;
+}
+
+.profile-header .profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+}
+
+.profile-header .profile-avatar i {
+    z-index: 1;
+}
+
+.profile-header .avatar-upload-btn {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 26px;
+    height: 26px;
+    background: var(--white);
+    color: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid var(--primary);
+    box-shadow: var(--shadow-sm);
+    z-index: 10;
+}
+
+.profile-header .avatar-upload-btn:hover {
+    background: var(--primary);
+    color: var(--white);
+    transform: scale(1.1);
+}
+
+.profile-header .avatar-upload-btn i {
+    font-size: 0.65rem;
 }
 
 .profile-header h2 {
@@ -2689,4 +2772,137 @@ body {
 ::selection {
     background: var(--primary);
     color: var(--white);
+}
+
+/* Upload Buttons in Image Area */
+.upload-buttons {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.btn-upload-option {
+    flex: 1;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--gray-300);
+    background: var(--white);
+    color: var(--gray-700);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-upload-option:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.btn-upload-option.btn-camera {
+    border-color: var(--success);
+    color: var(--success);
+}
+
+.btn-upload-option.btn-camera:hover {
+    background: rgba(16, 185, 129, 0.1);
+}
+
+/* Camera Modal Styles */
+#cameraModal .modal-content {
+    max-height: 90vh;
+    overflow: visible;
+    padding-bottom: 2rem;
+}
+
+.camera-container {
+    position: relative;
+    width: 100%;
+    background: var(--gray-900);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    aspect-ratio: 4/3;
+    max-height: 50vh;
+}
+
+.camera-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.camera-preview {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.camera-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.camera-controls {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 0.5rem;
+}
+
+.btn-capture {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    padding: 0;
+    background: var(--primary);
+    color: var(--white);
+    border: 4px solid var(--white);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4), 0 0 0 3px var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-capture:hover {
+    background: var(--primary-dark);
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5), 0 0 0 3px var(--primary-dark);
+}
+
+.btn-capture i {
+    margin: 0;
+}
+
+@media (max-width: 576px) {
+    .upload-buttons {
+        flex-direction: column;
+    }
+    
+    .camera-controls {
+        gap: 0.5rem;
+    }
+    
+    .camera-controls button {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+    }
+    
+    .btn-capture {
+        width: 50px;
+        height: 50px;
+    }
 }

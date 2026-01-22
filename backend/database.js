@@ -198,8 +198,22 @@ async function initialize() {
         )
     `);
 
+    // Admins table
+    exec(`
+        CREATE TABLE IF NOT EXISTS admins (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
     // Insert sample data if tables are empty
     await insertSampleData();
+
+    // Insert default admin if not exists
+    await insertDefaultAdmin();
     
     // Save to file
     saveDatabase();
@@ -265,6 +279,27 @@ async function insertSampleData() {
         });
 
         console.log('✅ Sample data inserted!');
+    }
+}
+
+async function insertDefaultAdmin() {
+    const result = db.exec('SELECT COUNT(*) as count FROM admins');
+    const count = result[0]?.values[0]?.[0] || 0;
+    
+    if (count === 0) {
+        console.log('👤 Creating default admin account...');
+        
+        const hashedPassword = bcrypt.hashSync('admin123', 10);
+        
+        db.run(`INSERT INTO admins (name, email, password) VALUES (?, ?, ?)`, [
+            'Admin',
+            'admin@campus.edu',
+            hashedPassword
+        ]);
+        
+        console.log('✅ Default admin created!');
+        console.log('   Email: admin@campus.edu');
+        console.log('   Password: admin123');
     }
 }
 
