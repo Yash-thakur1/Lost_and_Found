@@ -110,6 +110,7 @@ function createItemCard(item) {
     const icon = categoryIcons[item.category] || 'fa-box';
     const location = locationNames[item.location] || item.location;
     const initials = item.reporter?.name?.split(' ').map(n => n[0]).join('') || '?';
+    const hasReward = item.rewardOffered && item.rewardAmount > 0;
     
     return `
         <div class="item-card" onclick="openItemDetail(${item.id})">
@@ -120,6 +121,7 @@ function createItemCard(item) {
                 }
                 <span class="item-status ${item.status}">${item.status}</span>
                 <span class="item-category">${item.category}</span>
+                ${hasReward ? `<span class="reward-badge"><i class="fas fa-gift"></i> $${parseFloat(item.rewardAmount).toFixed(2)}</span>` : ''}
             </div>
             <div class="item-content">
                 <h3 class="item-title">${item.name}</h3>
@@ -277,7 +279,14 @@ function setupEventListeners() {
         btn.addEventListener('click', () => {
             typeBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            document.getElementById('reportType').value = btn.dataset.type;
+            const type = btn.dataset.type;
+            document.getElementById('reportType').value = type;
+            
+            // Show/hide reward field based on type (only for lost items)
+            const rewardGroup = document.getElementById('rewardGroup');
+            if (rewardGroup) {
+                rewardGroup.style.display = type === 'lost' ? 'block' : 'none';
+            }
         });
     });
 
@@ -463,6 +472,7 @@ async function openItemDetail(itemId) {
         
         const icon = categoryIcons[item.category] || 'fa-box';
         const location = locationNames[item.location] || item.location;
+        const hasReward = item.rewardOffered && item.rewardAmount > 0;
 
         const detailHTML = `
             <div class="item-detail-image">
@@ -476,6 +486,12 @@ async function openItemDetail(itemId) {
                     <h2 class="item-detail-title">${item.name}</h2>
                     <span class="item-detail-status ${item.status}">${item.status.toUpperCase()}</span>
                 </div>
+                ${hasReward ? `
+                    <div class="reward-info">
+                        <h4><i class="fas fa-gift"></i> Reward Offered</h4>
+                        <p>A reward of <span class="reward-amount">$${parseFloat(item.rewardAmount).toFixed(2)}</span> is being offered for the return of this item.</p>
+                    </div>
+                ` : ''}
                 <div class="item-detail-info">
                     <div class="info-item">
                         <i class="fas fa-folder"></i>
@@ -612,6 +628,12 @@ async function handleReportSubmit(e) {
     formData.append('location', document.getElementById('itemLocation').value);
     formData.append('dateLostFound', document.getElementById('itemDate').value);
     formData.append('description', document.getElementById('itemDescription').value);
+    
+    // Add reward amount if provided
+    const rewardAmount = document.getElementById('rewardAmount').value;
+    if (rewardAmount && parseFloat(rewardAmount) > 0) {
+        formData.append('rewardAmount', rewardAmount);
+    }
     
     const imageFile = document.getElementById('itemImage').files[0];
     if (imageFile) {

@@ -62,6 +62,8 @@ router.get('/', optionalAuth, (req, res) => {
                 location: item.location,
                 dateLostFound: item.date_lost_found,
                 image: item.image ? `/uploads/${item.image}` : null,
+                rewardAmount: item.reward_amount || 0,
+                rewardOffered: item.reward_offered || 0,
                 reporter: {
                     id: item.user_id,
                     name: item.reporter_name,
@@ -118,6 +120,8 @@ router.get('/:id', optionalAuth, (req, res) => {
             location: item.location,
             dateLostFound: item.date_lost_found,
             image: item.image ? `/uploads/${item.image}` : null,
+            rewardAmount: item.reward_amount || 0,
+            rewardOffered: item.reward_offered || 0,
             reporter: {
                 id: item.user_id,
                 name: item.reporter_name,
@@ -142,7 +146,7 @@ router.get('/:id', optionalAuth, (req, res) => {
 // Create new item
 router.post('/', authenticateToken, upload.single('image'), (req, res) => {
     try {
-        const { name, description, category, status, location, dateLostFound } = req.body;
+        const { name, description, category, status, location, dateLostFound, rewardAmount } = req.body;
 
         // Validation
         if (!name || !description || !category || !status || !location || !dateLostFound) {
@@ -150,17 +154,20 @@ router.post('/', authenticateToken, upload.single('image'), (req, res) => {
         }
 
         const image = req.file ? req.file.filename : null;
+        const reward = rewardAmount && parseFloat(rewardAmount) > 0 ? parseFloat(rewardAmount) : 0;
+        const rewardOffered = reward > 0 ? 1 : 0;
 
         const result = db.prepare(`
-            INSERT INTO items (name, description, category, status, location, date_lost_found, image, user_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(name, description, category, status, location, dateLostFound, image, req.user.id);
+            INSERT INTO items (name, description, category, status, location, date_lost_found, image, user_id, reward_amount, reward_offered)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(name, description, category, status, location, dateLostFound, image, req.user.id, reward, rewardOffered);
 
         // Log activity
+        const rewardMsg = reward > 0 ? ` (Reward: $${reward})` : '';
         db.prepare(`
             INSERT INTO activity_log (type, message, user_id, item_id)
             VALUES (?, ?, ?, ?)
-        `).run(status, `New ${status} item reported: ${name} at ${location}`, req.user.id, result.lastInsertRowid);
+        `).run(status, `New ${status} item reported: ${name} at ${location}${rewardMsg}`, req.user.id, result.lastInsertRowid);
         
         saveDatabase();
 
@@ -180,6 +187,8 @@ router.post('/', authenticateToken, upload.single('image'), (req, res) => {
                 location: newItem.location,
                 dateLostFound: newItem.date_lost_found,
                 image: newItem.image ? `/uploads/${newItem.image}` : null,
+                rewardAmount: newItem.reward_amount,
+                rewardOffered: newItem.reward_offered,
                 createdAt: newItem.created_at
             }
         });

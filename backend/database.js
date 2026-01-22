@@ -112,6 +112,8 @@ async function initialize() {
             image TEXT,
             user_id INTEGER NOT NULL,
             claimed_by INTEGER,
+            reward_amount DECIMAL(10, 2) DEFAULT 0,
+            reward_offered INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id),

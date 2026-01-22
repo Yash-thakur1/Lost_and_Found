@@ -535,6 +535,14 @@
                         <label><i class="fas fa-align-left"></i> Description*</label>
                         <textarea id="itemDescription" rows="3" required placeholder="Provide detailed description including color, brand, any distinguishing features..."></textarea>
                     </div>
+                    <div class="form-group" id="rewardGroup" style="display: none;">
+                        <label><i class="fas fa-gift"></i> Reward Amount (Optional)</label>
+                        <div class="input-with-prefix">
+                            <span class="input-prefix">$</span>
+                            <input type="number" id="rewardAmount" min="0" step="0.01" placeholder="0.00">
+                        </div>
+                        <small class="form-help">Offering a reward can increase the chance of recovery</small>
+                    </div>
                     <div class="form-group">
                         <label><i class="fas fa-image"></i> Upload Image (Optional)</label>
                         <div class="image-upload-area" id="imageUploadArea">
