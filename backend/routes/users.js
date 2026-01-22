@@ -207,6 +207,8 @@ router.post('/alerts', authenticateToken, (req, res) => {
             INSERT INTO search_alerts (user_id, keywords, category)
             VALUES (?, ?, ?)
         `).run(req.user.id, keywords, category || null);
+        
+        saveDatabase();
 
         res.status(201).json({
             message: 'Search alert created successfully!',
@@ -243,6 +245,7 @@ router.delete('/alerts/:id', authenticateToken, (req, res) => {
         }
 
         db.prepare('DELETE FROM search_alerts WHERE id = ?').run(req.params.id);
+        saveDatabase();
 
         res.json({ message: 'Alert deleted successfully!' });
     } catch (error) {

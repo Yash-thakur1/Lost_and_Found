@@ -26,3 +26,6 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# MCP Config (contains API keys)
+.vscode/mcp.json

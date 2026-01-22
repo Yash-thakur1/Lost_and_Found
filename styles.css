@@ -2142,6 +2142,35 @@ body {
     .nav-links,
     .nav-actions {
         display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--card-bg);
+        padding: 1rem;
+        flex-direction: column;
+        gap: 0.75rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        border-radius: 0 0 12px 12px;
+    }
+
+    .nav-links.mobile-active,
+    .nav-actions.mobile-active {
+        display: flex;
+    }
+
+    .nav-links {
+        top: 100%;
+    }
+
+    .nav-actions {
+        top: calc(100% + 180px);
+    }
+
+    .nav-links li a {
+        padding: 0.75rem;
+        display: block;
+        text-align: center;
     }
 
     .mobile-menu-btn {

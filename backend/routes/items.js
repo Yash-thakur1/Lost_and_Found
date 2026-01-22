@@ -213,6 +213,7 @@ router.put('/:id', authenticateToken, upload.single('image'), (req, res) => {
         `).run(name, description, category, status, location, dateLostFound, image, req.params.id);
 
         const updatedItem = db.prepare('SELECT * FROM items WHERE id = ?').get(req.params.id);
+        saveDatabase();
 
         res.json({
             message: 'Item updated successfully!',
@@ -236,6 +237,7 @@ router.delete('/:id', authenticateToken, (req, res) => {
         }
 
         db.prepare('DELETE FROM items WHERE id = ?').run(req.params.id);
+        saveDatabase();
 
         res.json({ message: 'Item deleted successfully!' });
     } catch (error) {
@@ -285,6 +287,8 @@ router.post('/:id/claim', authenticateToken, (req, res) => {
             INSERT INTO activity_log (type, message, user_id, item_id)
             VALUES (?, ?, ?, ?)
         `).run('claimed', `Item claim submitted: ${item.name}`, req.user.id, itemId);
+        
+        saveDatabase();
 
         res.status(201).json({
             message: 'Claim submitted successfully! The item owner will be notified.',
@@ -337,6 +341,8 @@ router.put('/claims/:claimId', authenticateToken, (req, res) => {
             `Your claim for ${claim.item_name} has been ${status}.`,
             claim.item_id
         );
+        
+        saveDatabase();
 
         res.json({ message: `Claim ${status} successfully!` });
     } catch (error) {
@@ -400,6 +406,10 @@ function checkForMatches(newItemId, status, category, name) {
             newItemId
         );
     });
+    
+    if (matches.length > 0) {
+        saveDatabase();
+    }
 }
 
 module.exports = router;

@@ -246,7 +246,15 @@ function setupEventListeners() {
         pill.addEventListener('click', () => {
             pills.forEach(p => p.classList.remove('active'));
             pill.classList.add('active');
-            currentFilters.category = pill.dataset.category;
+            const category = pill.dataset.category === 'all' ? '' : pill.dataset.category;
+            currentFilters.category = category;
+            
+            // Sync with dropdown
+            const categoryDropdown = document.getElementById('categoryFilter');
+            if (categoryDropdown) {
+                categoryDropdown.value = category;
+            }
+            
             loadItems();
         });
     });
@@ -330,6 +338,10 @@ function setupEventListeners() {
             }, 300);
         });
     }
+
+    // Category and Status Filter dropdowns
+    document.getElementById('categoryFilter')?.addEventListener('change', filterItems);
+    document.getElementById('statusFilter')?.addEventListener('change', filterItems);
 
     // Load More Button
     document.getElementById('loadMoreBtn')?.addEventListener('click', async () => {
@@ -541,6 +553,21 @@ function filterItems() {
         page: 1
     };
     currentPage = 1;
+
+    // Sync category pills with dropdown
+    const pills = document.querySelectorAll('.pill');
+    pills.forEach(pill => {
+        pill.classList.remove('active');
+        const pillCategory = pill.dataset.category === 'all' ? '' : pill.dataset.category;
+        if (pillCategory === category) {
+            pill.classList.add('active');
+        }
+    });
+    // If no category selected, activate "All Items" pill
+    if (!category) {
+        const allPill = document.querySelector('.pill[data-category="all"]');
+        if (allPill) allPill.classList.add('active');
+    }
 
     loadItems();
 }

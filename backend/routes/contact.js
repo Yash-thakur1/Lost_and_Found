@@ -17,6 +17,8 @@ router.post('/', (req, res) => {
             INSERT INTO contact_messages (name, email, subject, message)
             VALUES (?, ?, ?, ?)
         `).run(name, email, subject, message);
+        
+        saveDatabase();
 
         res.status(201).json({
             message: 'Your message has been sent successfully! We will get back to you soon.',
@@ -44,6 +46,8 @@ router.post('/newsletter', (req, res) => {
         }
 
         db.prepare('INSERT INTO newsletter_subscribers (email) VALUES (?)').run(email);
+        
+        saveDatabase();
 
         res.status(201).json({
             message: 'Successfully subscribed to newsletter!'
@@ -68,6 +72,8 @@ router.delete('/newsletter', (req, res) => {
         if (result.changes === 0) {
             return res.status(404).json({ error: 'Email not found in subscribers.' });
         }
+        
+        saveDatabase();
 
         res.json({ message: 'Successfully unsubscribed from newsletter.' });
     } catch (error) {

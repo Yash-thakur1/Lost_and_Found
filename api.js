@@ -95,13 +95,6 @@ const AuthAPI = {
         return await apiRequest('/auth/me');
     },
 
-    async updatePassword(currentPassword, newPassword) {
-        return await apiRequest('/auth/password', {
-            method: 'PUT',
-            body: JSON.stringify({ currentPassword, newPassword })
-        });
-    },
-
     async changePassword(currentPassword, newPassword) {
         return await apiRequest('/auth/password', {
             method: 'PUT',

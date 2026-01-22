@@ -59,6 +59,7 @@ router.put('/:id/read', authenticateToken, (req, res) => {
         }
 
         db.prepare('UPDATE notifications SET is_read = 1 WHERE id = ?').run(req.params.id);
+        saveDatabase();
 
         res.json({ message: 'Notification marked as read.' });
     } catch (error) {
@@ -71,6 +72,7 @@ router.put('/:id/read', authenticateToken, (req, res) => {
 router.put('/read-all', authenticateToken, (req, res) => {
     try {
         db.prepare('UPDATE notifications SET is_read = 1 WHERE user_id = ?').run(req.user.id);
+        saveDatabase();
 
         res.json({ message: 'All notifications marked as read.' });
     } catch (error) {
@@ -90,6 +92,7 @@ router.delete('/:id', authenticateToken, (req, res) => {
         }
 
         db.prepare('DELETE FROM notifications WHERE id = ?').run(req.params.id);
+        saveDatabase();
 
         res.json({ message: 'Notification deleted.' });
     } catch (error) {
@@ -102,6 +105,7 @@ router.delete('/:id', authenticateToken, (req, res) => {
 router.delete('/', authenticateToken, (req, res) => {
     try {
         db.prepare('DELETE FROM notifications WHERE user_id = ?').run(req.user.id);
+        saveDatabase();
 
         res.json({ message: 'All notifications deleted.' });
     } catch (error) {

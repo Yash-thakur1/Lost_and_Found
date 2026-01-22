@@ -169,6 +169,8 @@ router.put('/password', authenticateToken, async (req, res) => {
         // Update password
         db.prepare('UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
             .run(hashedPassword, req.user.id);
+        
+        saveDatabase();
 
         res.json({ message: 'Password updated successfully!' });
     } catch (error) {
