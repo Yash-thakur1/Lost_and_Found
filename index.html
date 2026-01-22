@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Lost & Found | Find What Matters</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="floating-shape shape1"></div>
+        <div class="floating-shape shape2"></div>
+        <div class="floating-shape shape3"></div>
+        <div class="floating-shape shape4"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <i class="fas fa-search-location"></i>
+                <span>Campus<strong>L&F</strong></span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#home" class="active">Home</a></li>
+                <li><a href="#browse">Browse Items</a></li>
+                <li><a href="#report">Report Item</a></li>
+                <li><a href="#stats">Statistics</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button class="btn-search" id="searchBtn" onclick="scrollToSection('browse'); document.getElementById('quickSearchInput')?.focus();">
+                    <i class="fas fa-search"></i>
+                </button>
+                <button class="btn-notification" id="notificationBtn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                </button>
+                <button class="btn-primary" onclick="openModal('loginModal')">
+                    <i class="fas fa-user"></i> Login
+                </button>
+            </div>
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <div class="hero-text">
+                <span class="hero-badge">🎓 For College Students</span>
+                <h1>Lost Something on Campus?<br><span class="gradient-text">We'll Help You Find It!</span></h1>
+                <p>Join thousands of students who have successfully recovered their lost belongings through our platform. Report, search, and reconnect with your items.</p>
+                <div class="hero-buttons">
+                    <button class="btn-primary btn-large" onclick="openModal('reportModal')">
+                        <i class="fas fa-plus-circle"></i> Report Item
+                    </button>
+                    <button class="btn-secondary btn-large" onclick="scrollToSection('browse')">
+                        <i class="fas fa-search"></i> Browse Items
+                    </button>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" data-count="1247">0</span>
+                        <span class="stat-label">Items Found</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" data-count="892">0</span>
+                        <span class="stat-label">Reunited</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" data-count="3500">0</span>
+                        <span class="stat-label">Active Users</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="hero-card">
+                    <div class="card-visual">
+                        <i class="fas fa-box-open"></i>
+                    </div>
+                    <div class="floating-icons">
+                        <div class="float-icon icon1"><i class="fas fa-key"></i></div>
+                        <div class="float-icon icon2"><i class="fas fa-wallet"></i></div>
+                        <div class="float-icon icon3"><i class="fas fa-mobile-alt"></i></div>
+                        <div class="float-icon icon4"><i class="fas fa-headphones"></i></div>
+                        <div class="float-icon icon5"><i class="fas fa-book"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <i class="fas fa-chevron-down"></i>
+        </div>
+    </section>
+
+
+
+    <!-- Browse Items Section -->
+    <section id="browse" class="browse-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Browse</span>
+                <h2>Recent Lost & Found Items</h2>
+                <p>Check if your item has been found or help others find theirs</p>
+            </div>
+
+            <!-- Search & Filter Bar -->
+            <div class="browse-search-bar">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="quickSearchInput" placeholder="Search for items (e.g., iPhone, wallet, keys...)">
+                </div>
+                <select id="categoryFilter" class="filter-select">
+                    <option value="">All Categories</option>
+                    <option value="electronics">Electronics</option>
+                    <option value="accessories">Accessories</option>
+                    <option value="documents">Documents</option>
+                    <option value="clothing">Clothing</option>
+                    <option value="keys">Keys</option>
+                    <option value="bags">Bags</option>
+                    <option value="other">Other</option>
+                </select>
+                <select id="statusFilter" class="filter-select">
+                    <option value="">All Status</option>
+                    <option value="lost">Lost</option>
+                    <option value="found">Found</option>
+                </select>
+                <button class="btn-primary" onclick="filterItems()">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+            </div>
+
+            <!-- Category Pills -->
+            <div class="category-pills">
+                <button class="pill active" data-category="all">All Items</button>
+                <button class="pill" data-category="electronics"><i class="fas fa-laptop"></i> Electronics</button>
+                <button class="pill" data-category="accessories"><i class="fas fa-glasses"></i> Accessories</button>
+                <button class="pill" data-category="documents"><i class="fas fa-file-alt"></i> Documents</button>
+                <button class="pill" data-category="clothing"><i class="fas fa-tshirt"></i> Clothing</button>
+                <button class="pill" data-category="keys"><i class="fas fa-key"></i> Keys</button>
+                <button class="pill" data-category="bags"><i class="fas fa-shopping-bag"></i> Bags</button>
+            </div>
+
+            <!-- Items Grid -->
+            <div class="items-grid" id="itemsGrid">
+                <!-- Items will be loaded dynamically -->
+            </div>
+
+            <div class="load-more">
+                <button class="btn-secondary" id="loadMoreBtn">
+                    <i class="fas fa-plus"></i> Load More Items
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Process</span>
+                <h2>How It Works</h2>
+                <p>Three simple steps to find or report lost items</p>
+            </div>
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number">01</div>
+                    <div class="step-icon">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <h3>Report Item</h3>
+                    <p>Fill out a simple form with details about the lost or found item including description, location, and photos.</p>
+                </div>
+                <div class="step-connector">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">02</div>
+                    <div class="step-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3>Match & Connect</h3>
+                    <p>Our system matches lost items with found items and notifies you when there's a potential match.</p>
+                </div>
+                <div class="step-connector">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">03</div>
+                    <div class="step-icon">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <h3>Claim & Reunite</h3>
+                    <p>Verify ownership, connect with the finder, and get your belongings back safely.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Statistics Section -->
+    <section id="stats" class="statistics-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Impact</span>
+                <h2>Making a Difference</h2>
+                <p>See how we're helping the campus community</p>
+            </div>
+            <div class="stats-grid">
+                <div class="stats-card">
+                    <div class="stats-icon electronics">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <div class="stats-info">
+                        <span class="stats-value" data-count="456">0</span>
+                        <span class="stats-label">Electronics Returned</span>
+                    </div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon documents">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <div class="stats-info">
+                        <span class="stats-value" data-count="312">0</span>
+                        <span class="stats-label">ID Cards Found</span>
+                    </div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon keys">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <div class="stats-info">
+                        <span class="stats-value" data-count="189">0</span>
+                        <span class="stats-label">Keys Reunited</span>
+                    </div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon success">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="stats-info">
+                        <span class="stats-value" data-count="78">0</span>
+                        <span class="stats-label">Success Rate %</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Activity Feed -->
+            <div class="activity-feed">
+                <h3><i class="fas fa-stream"></i> Live Activity Feed</h3>
+                <div class="feed-container" id="activityFeed">
+                    <!-- Activities loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Reviews</span>
+                <h2>What Students Say</h2>
+                <p>Real stories from our campus community</p>
+            </div>
+            <div class="testimonials-slider">
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <div class="stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p>"I lost my laptop in the library and thought it was gone forever. Within 2 hours, someone reported finding it through this platform. Absolutely amazing!"</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div class="author-info">
+                            <strong>Sarah Johnson</strong>
+                            <span>Computer Science, 3rd Year</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <div class="stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p>"Found someone's wallet with all their cards and cash. This platform made it so easy to connect with the owner. Felt great to help!"</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div class="author-info">
+                            <strong>Michael Chen</strong>
+                            <span>Business Admin, 2nd Year</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <div class="stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <p>"The notification system is brilliant! Got an alert the moment my lost AirPods were reported found. Picked them up the same day."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div class="author-info">
+                            <strong>Emily Rodriguez</strong>
+                            <span>Psychology, 4th Year</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+        <div class="container">
+            <div class="contact-wrapper">
+                <div class="contact-info">
+                    <span class="section-badge">Contact</span>
+                    <h2>Get In Touch</h2>
+                    <p>Have questions or need assistance? We're here to help!</p>
+                    <div class="contact-details">
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <div>
+                                <strong>Location</strong>
+                                <span>Student Center, Room 204</span>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-clock"></i>
+                            <div>
+                                <strong>Office Hours</strong>
+                                <span>Mon-Fri: 9AM - 5PM</span>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <div>
+                                <strong>Email</strong>
+                                <span>lostandfound@campus.edu</span>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-phone"></i>
+                            <div>
+                                <strong>Phone</strong>
+                                <span>(555) 123-4567</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+                <div class="contact-form-container">
+                    <form class="contact-form" id="contactForm">
+                        <div class="form-group">
+                            <label>Your Name</label>
+                            <input type="text" required placeholder="Enter your name">
+                        </div>
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" required placeholder="Enter your email">
+                        </div>
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <select required>
+                                <option value="">Select a subject</option>
+                                <option value="general">General Inquiry</option>
+                                <option value="claim">Item Claim Issue</option>
+                                <option value="report">Report Problem</option>
+                                <option value="suggestion">Suggestion</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Message</label>
+                            <textarea rows="4" required placeholder="Write your message..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary btn-full">
+                            <i class="fas fa-paper-plane"></i> Send Message
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="#" class="logo">
+                        <i class="fas fa-search-location"></i>
+                        <span>Campus<strong>L&F</strong></span>
+                    </a>
+                    <p>Helping students find what matters most. Our mission is to create a connected campus community where lost items find their way home.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#browse">Browse Items</a></li>
+                        <li><a href="#" onclick="openModal('reportModal')">Report Item</a></li>
+                        <li><a href="#stats">Statistics</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Categories</h4>
+                    <ul>
+                        <li><a href="#">Electronics</a></li>
+                        <li><a href="#">Documents</a></li>
+                        <li><a href="#">Accessories</a></li>
+                        <li><a href="#">Keys & Cards</a></li>
+                    </ul>
+                </div>
+                <div class="footer-newsletter">
+                    <h4>Stay Updated</h4>
+                    <p>Subscribe to get notified about items matching your search.</p>
+                    <form class="newsletter-form">
+                        <input type="email" placeholder="Your email address">
+                        <button type="submit"><i class="fas fa-arrow-right"></i></button>
+                    </form>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Campus Lost & Found. Made with <i class="fas fa-heart"></i> for students.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Report Item Modal -->
+    <div class="modal" id="reportModal">
+        <div class="modal-overlay" onclick="closeModal('reportModal')"></div>
+        <div class="modal-content modal-large">
+            <button class="modal-close" onclick="closeModal('reportModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-header">
+                <h2><i class="fas fa-plus-circle"></i> Report an Item</h2>
+                <p>Help us help you find what's lost</p>
+            </div>
+            <div class="modal-body">
+                <div class="report-type-selector">
+                    <button class="type-btn active" data-type="lost">
+                        <i class="fas fa-search"></i>
+                        <span>I Lost Something</span>
+                    </button>
+                    <button class="type-btn" data-type="found">
+                        <i class="fas fa-hand-holding-heart"></i>
+                        <span>I Found Something</span>
+                    </button>
+                </div>
+                <form id="reportForm" class="report-form">
+                    <input type="hidden" id="reportType" value="lost">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-tag"></i> Item Name*</label>
+                            <input type="text" id="itemName" required placeholder="e.g., Blue iPhone 15">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-folder"></i> Category*</label>
+                            <select id="itemCategory" required>
+                                <option value="">Select category</option>
+                                <option value="electronics">Electronics</option>
+                                <option value="accessories">Accessories</option>
+                                <option value="documents">Documents</option>
+                                <option value="clothing">Clothing</option>
+                                <option value="keys">Keys</option>
+                                <option value="bags">Bags</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-map-marker-alt"></i> Location*</label>
+                            <select id="itemLocation" required>
+                                <option value="">Select location</option>
+                                <option value="library">Library</option>
+                                <option value="cafeteria">Cafeteria</option>
+                                <option value="gym">Gymnasium</option>
+                                <option value="science">Science Building</option>
+                                <option value="arts">Arts Building</option>
+                                <option value="engineering">Engineering Building</option>
+                                <option value="dormitory">Dormitory</option>
+                                <option value="parking">Parking Lot</option>
+                                <option value="stadium">Stadium</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar"></i> Date*</label>
+                            <input type="date" id="itemDate" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-align-left"></i> Description*</label>
+                        <textarea id="itemDescription" rows="3" required placeholder="Provide detailed description including color, brand, any distinguishing features..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-image"></i> Upload Image (Optional)</label>
+                        <div class="image-upload-area" id="imageUploadArea">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Drag & drop an image or click to browse</p>
+                            <input type="file" id="itemImage" accept="image/*" hidden>
+                        </div>
+                        <div id="imagePreview" class="image-preview"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-user"></i> Your Name*</label>
+                            <input type="text" id="reporterName" required placeholder="Your full name">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-envelope"></i> Email*</label>
+                            <input type="email" id="reporterEmail" required placeholder="your@email.com">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-phone"></i> Phone (Optional)</label>
+                        <input type="tel" id="reporterPhone" placeholder="Your phone number">
+                    </div>
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="agreeTerms" required>
+                        <label for="agreeTerms">I agree to the terms of service and privacy policy</label>
+                    </div>
+                    <button type="submit" class="btn-primary btn-full btn-large">
+                        <i class="fas fa-paper-plane"></i> Submit Report
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-overlay" onclick="closeModal('loginModal')"></div>
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('loginModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-header">
+                <h2><i class="fas fa-user-circle"></i> Welcome Back</h2>
+                <p>Login to manage your reports</p>
+            </div>
+            <div class="modal-body">
+                <div class="auth-tabs">
+                    <button class="auth-tab active" data-tab="login">Login</button>
+                    <button class="auth-tab" data-tab="register">Register</button>
+                </div>
+                <form id="loginForm" class="auth-form active">
+                    <div class="form-group">
+                        <label><i class="fas fa-envelope"></i> Email</label>
+                        <input type="email" required placeholder="your@campus.edu">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-lock"></i> Password</label>
+                        <input type="password" required placeholder="••••••••">
+                    </div>
+                    <div class="form-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox"> Remember me
+                        </label>
+                        <a href="#" class="forgot-link">Forgot password?</a>
+                    </div>
+                    <button type="submit" class="btn-primary btn-full">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                    <div class="social-login">
+                        <p>Or continue with</p>
+                        <div class="social-buttons">
+                            <button type="button" class="social-btn google">
+                                <i class="fab fa-google"></i>
+                            </button>
+                            <button type="button" class="social-btn microsoft">
+                                <i class="fab fa-microsoft"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                <form id="registerForm" class="auth-form">
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Full Name</label>
+                        <input type="text" required placeholder="Your full name">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-id-badge"></i> Student ID</label>
+                        <input type="text" required placeholder="e.g., STU2024001">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-envelope"></i> Campus Email</label>
+                        <input type="email" required placeholder="your@campus.edu">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-lock"></i> Password</label>
+                        <input type="password" required placeholder="Create a strong password">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-lock"></i> Confirm Password</label>
+                        <input type="password" required placeholder="Confirm your password">
+                    </div>
+                    <button type="submit" class="btn-primary btn-full">
+                        <i class="fas fa-user-plus"></i> Create Account
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Item Detail Modal -->
+    <div class="modal" id="itemModal">
+        <div class="modal-overlay" onclick="closeModal('itemModal')"></div>
+        <div class="modal-content modal-large">
+            <button class="modal-close" onclick="closeModal('itemModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="item-detail" id="itemDetail">
+                <!-- Item details loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal" id="profileModal">
+        <div class="modal-overlay" onclick="closeModal('profileModal')"></div>
+        <div class="modal-content modal-medium">
+            <button class="modal-close" onclick="closeModal('profileModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="profile-container">
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profileAvatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h2 id="profileName">User Name</h2>
+                    <p id="profileEmail">user@campus.edu</p>
+                    <button class="btn-logout-header" onclick="handleLogout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+                
+                <div class="profile-tabs">
+                    <button class="profile-tab active" data-tab="info" onclick="switchProfileTab('info')">
+                        <i class="fas fa-user"></i> Profile Info
+                    </button>
+                    <button class="profile-tab" data-tab="items" onclick="switchProfileTab('items')">
+                        <i class="fas fa-box"></i> My Items
+                    </button>
+                    <button class="profile-tab" data-tab="claims" onclick="switchProfileTab('claims')">
+                        <i class="fas fa-hand-paper"></i> My Claims
+                    </button>
+                    <button class="profile-tab" data-tab="settings" onclick="switchProfileTab('settings')">
+                        <i class="fas fa-cog"></i> Settings
+                    </button>
+                </div>
+
+                <!-- Profile Info Tab -->
+                <div class="profile-tab-content active" id="tab-info">
+                    <form id="profileForm" class="profile-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label><i class="fas fa-user"></i> Full Name</label>
+                                <input type="text" id="editName" placeholder="Your full name">
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-id-card"></i> Student ID</label>
+                                <input type="text" id="editStudentId" placeholder="STU2024XXX" readonly>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label><i class="fas fa-envelope"></i> Email</label>
+                                <input type="email" id="editEmail" placeholder="your@campus.edu" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-phone"></i> Phone</label>
+                                <input type="tel" id="editPhone" placeholder="Your phone number">
+                            </div>
+                        </div>
+                        <div class="profile-stats">
+                            <div class="stat-box">
+                                <span class="stat-number" id="statTotal">0</span>
+                                <span class="stat-label">Total Items</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-number" id="statLost">0</span>
+                                <span class="stat-label">Lost</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-number" id="statFound">0</span>
+                                <span class="stat-label">Found</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-number" id="statResolved">0</span>
+                                <span class="stat-label">Resolved</span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary btn-full">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </form>
+                </div>
+
+                <!-- My Items Tab -->
+                <div class="profile-tab-content" id="tab-items">
+                    <div class="my-items-list" id="myItemsList">
+                        <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading your items...</div>
+                    </div>
+                </div>
+
+                <!-- My Claims Tab -->
+                <div class="profile-tab-content" id="tab-claims">
+                    <div class="my-claims-list" id="myClaimsList">
+                        <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading your claims...</div>
+                    </div>
+                </div>
+
+                <!-- Settings Tab -->
+                <div class="profile-tab-content" id="tab-settings">
+                    <form id="passwordForm" class="settings-form">
+                        <h4><i class="fas fa-key"></i> Change Password</h4>
+                        <div class="form-group">
+                            <label>Current Password</label>
+                            <input type="password" id="currentPassword" placeholder="Enter current password">
+                        </div>
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <input type="password" id="newPassword" placeholder="Enter new password">
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm New Password</label>
+                            <input type="password" id="confirmNewPassword" placeholder="Confirm new password">
+                        </div>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-lock"></i> Update Password
+                        </button>
+                    </form>
+                    <div class="logout-section">
+                        <button class="btn-danger btn-full" onclick="handleLogout()">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Panel -->
+    <div class="notification-panel" id="notificationPanel">
+        <div class="panel-header">
+            <h3><i class="fas fa-bell"></i> Notifications</h3>
+            <button class="mark-read">Mark all as read</button>
+        </div>
+        <div class="notification-list" id="notificationList">
+            <!-- Notifications loaded dynamically -->
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="api.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
