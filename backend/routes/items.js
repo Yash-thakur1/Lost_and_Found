@@ -163,7 +163,7 @@ router.post('/', authenticateToken, upload.single('image'), (req, res) => {
         `).run(name, description, category, status, location, dateLostFound, image, req.user.id, reward, rewardOffered);
 
         // Log activity
-        const rewardMsg = reward > 0 ? ` (Reward: $${reward})` : '';
+        const rewardMsg = reward > 0 ? ` (Reward: $${reward.toFixed(2)})` : '';
         db.prepare(`
             INSERT INTO activity_log (type, message, user_id, item_id)
             VALUES (?, ?, ?, ?)
