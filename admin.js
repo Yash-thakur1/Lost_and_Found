@@ -80,6 +80,8 @@ function setupEventListeners() {
     document.getElementById('adminProfileForm')?.addEventListener('submit', handleAdminProfile);
     document.getElementById('adminPasswordForm')?.addEventListener('submit', handleAdminPassword);
     document.getElementById('archiveSettingsForm')?.addEventListener('submit', saveArchiveSettings);
+    document.getElementById('emailSettingsForm')?.addEventListener('submit', saveEmailSettings);
+    document.getElementById('newsletterForm')?.addEventListener('submit', sendNewsletter);
     
     // Archive search
     document.getElementById('archiveSearch')?.addEventListener('input', debounce(loadArchivedItemsAdmin, 300));
@@ -186,6 +188,7 @@ function navigateToSection(section) {
         claims: 'Claims',
         messages: 'Messages',
         activity: 'Activity Log',
+        email: 'Email Settings',
         settings: 'Settings'
     };
     document.getElementById('pageTitle').textContent = titles[section] || 'Dashboard';
@@ -219,6 +222,9 @@ function loadSectionData(section) {
             break;
         case 'activity':
             loadActivityLog();
+            break;
+        case 'email':
+            loadEmailSettings();
             break;
         case 'settings':
             loadAdminSettings();
@@ -931,6 +937,127 @@ async function loadActivityLog() {
 
 // ============================================
 //  Settings
+// ============================================
+//  Email Settings
+// ============================================
+
+async function loadEmailSettings() {
+    try {
+        const data = await adminFetch('/email-settings');
+        const settings = data.settings;
+        
+        document.getElementById('smtpHost').value = settings.smtp_host || '';
+        document.getElementById('smtpPort').value = settings.smtp_port || 587;
+        document.getElementById('smtpUser').value = settings.smtp_user || '';
+        document.getElementById('smtpPass').value = settings.smtp_pass || '';
+        document.getElementById('smtpSecure').checked = settings.smtp_secure === true;
+        document.getElementById('fromEmail').value = settings.from_email || '';
+        document.getElementById('fromName').value = settings.from_name || '';
+        document.getElementById('emailEnabled').checked = settings.email_enabled === true;
+        
+        // Load subscriber stats
+        loadSubscriberStats();
+    } catch (error) {
+        console.error('Failed to load email settings:', error);
+    }
+}
+
+async function saveEmailSettings(e) {
+    e.preventDefault();
+    
+    const settings = {
+        smtp_host: document.getElementById('smtpHost').value,
+        smtp_port: parseInt(document.getElementById('smtpPort').value),
+        smtp_user: document.getElementById('smtpUser').value,
+        smtp_pass: document.getElementById('smtpPass').value,
+        smtp_secure: document.getElementById('smtpSecure').checked,
+        from_email: document.getElementById('fromEmail').value,
+        from_name: document.getElementById('fromName').value,
+        email_enabled: document.getElementById('emailEnabled').checked
+    };
+    
+    try {
+        await adminFetch('/email-settings', {
+            method: 'PUT',
+            body: JSON.stringify(settings)
+        });
+        showToast('Email settings saved successfully', 'success');
+    } catch (error) {
+        showToast(error.message || 'Failed to save email settings', 'error');
+    }
+}
+
+async function testEmailConnection() {
+    try {
+        showToast('Testing email connection...', 'info');
+        const data = await adminFetch('/test-email', { method: 'POST' });
+        showToast(data.message || 'Test email sent successfully!', 'success');
+    } catch (error) {
+        showToast(error.details || error.message || 'Email test failed', 'error');
+    }
+}
+
+async function loadSubscriberStats() {
+    try {
+        const data = await adminFetch('/subscriber-stats');
+        const stats = data.stats;
+        
+        const container = document.getElementById('subscriberStats');
+        container.innerHTML = `
+            <div class="stat-item">
+                <span class="stat-value">${stats.newsletter_subscribers || 0}</span>
+                <span class="stat-label">Newsletter</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">${stats.claims_subscribers || 0}</span>
+                <span class="stat-label">Claims</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">${stats.matches_subscribers || 0}</span>
+                <span class="stat-label">Matches</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">${stats.expiry_subscribers || 0}</span>
+                <span class="stat-label">Expiry</span>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Failed to load subscriber stats:', error);
+    }
+}
+
+async function sendNewsletter(e) {
+    e.preventDefault();
+    
+    const subject = document.getElementById('newsletterSubject').value;
+    const content = document.getElementById('newsletterContent').value;
+    
+    if (!subject || !content) {
+        showToast('Please fill in both subject and content', 'error');
+        return;
+    }
+    
+    if (!confirm('Are you sure you want to send this newsletter to all subscribers?')) {
+        return;
+    }
+    
+    try {
+        showToast('Sending newsletter...', 'info');
+        const data = await adminFetch('/send-newsletter', {
+            method: 'POST',
+            body: JSON.stringify({ subject, content })
+        });
+        
+        showToast(`Newsletter sent to ${data.sent} subscribers`, 'success');
+        document.getElementById('newsletterSubject').value = '';
+        document.getElementById('newsletterContent').value = '';
+    } catch (error) {
+        showToast(error.message || 'Failed to send newsletter', 'error');
+    }
+}
+
+// ============================================
+//  Admin Settings
 // ============================================
 
 function loadAdminSettings() {

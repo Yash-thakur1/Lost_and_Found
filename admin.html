@@ -71,6 +71,10 @@
                     <i class="fas fa-envelope"></i>
                     <span>Messages</span>
                 </a>
+                <a href="#" class="nav-item" data-section="email">
+                    <i class="fas fa-mail-bulk"></i>
+                    <span>Email Settings</span>
+                </a>
                 <a href="#" class="nav-item" data-section="activity">
                     <i class="fas fa-history"></i>
                     <span>Activity Log</span>
@@ -470,6 +474,111 @@
                                 <i class="fas fa-trash"></i> Delete Selected
                             </button>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Email Settings Section -->
+            <section class="admin-section" id="section-email">
+                <div class="settings-grid">
+                    <div class="settings-card full-width">
+                        <h3><i class="fas fa-cogs"></i> SMTP Configuration</h3>
+                        <form id="emailSettingsForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>SMTP Host</label>
+                                    <input type="text" id="smtpHost" placeholder="smtp.gmail.com">
+                                </div>
+                                <div class="form-group">
+                                    <label>SMTP Port</label>
+                                    <input type="number" id="smtpPort" placeholder="587" value="587">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>SMTP Username</label>
+                                    <input type="text" id="smtpUser" placeholder="your-email@gmail.com">
+                                </div>
+                                <div class="form-group">
+                                    <label>SMTP Password</label>
+                                    <input type="password" id="smtpPass" placeholder="App-specific password">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>From Email</label>
+                                    <input type="email" id="fromEmail" placeholder="noreply@campus.edu">
+                                </div>
+                                <div class="form-group">
+                                    <label>From Name</label>
+                                    <input type="text" id="fromName" placeholder="Campus Lost & Found">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group toggle-inline">
+                                    <label>
+                                        <input type="checkbox" id="smtpSecure">
+                                        Use SSL/TLS
+                                    </label>
+                                </div>
+                                <div class="form-group toggle-inline">
+                                    <label>
+                                        <input type="checkbox" id="emailEnabled">
+                                        Enable Email Notifications
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-primary">
+                                    <i class="fas fa-save"></i> Save Settings
+                                </button>
+                                <button type="button" class="btn-secondary" onclick="testEmailConnection()">
+                                    <i class="fas fa-paper-plane"></i> Test Connection
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="settings-card">
+                        <h3><i class="fas fa-chart-pie"></i> Subscriber Stats</h3>
+                        <div id="subscriberStats" class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-value">-</span>
+                                <span class="stat-label">Newsletter</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">-</span>
+                                <span class="stat-label">Claims</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">-</span>
+                                <span class="stat-label">Matches</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">-</span>
+                                <span class="stat-label">Expiry</span>
+                            </div>
+                        </div>
+                        <button class="btn-secondary btn-full" onclick="loadSubscriberStats()" style="margin-top: 1rem;">
+                            <i class="fas fa-sync"></i> Refresh Stats
+                        </button>
+                    </div>
+
+                    <div class="settings-card">
+                        <h3><i class="fas fa-newspaper"></i> Send Newsletter</h3>
+                        <form id="newsletterForm">
+                            <div class="form-group">
+                                <label>Subject</label>
+                                <input type="text" id="newsletterSubject" placeholder="Newsletter subject...">
+                            </div>
+                            <div class="form-group">
+                                <label>Content (HTML supported)</label>
+                                <textarea id="newsletterContent" rows="6" placeholder="Newsletter content..."></textarea>
+                            </div>
+                            <button type="submit" class="btn-primary btn-full">
+                                <i class="fas fa-paper-plane"></i> Send Newsletter
+                            </button>
+                        </form>
                     </div>
                 </div>
             </section>

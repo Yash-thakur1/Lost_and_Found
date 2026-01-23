@@ -10,7 +10,10 @@ const notificationRoutes = require('./routes/notifications');
 const statsRoutes = require('./routes/stats');
 const adminRoutes = require('./routes/admin');
 const archiveRoutes = require('./routes/archive');
+const emailRoutes = require('./routes/email');
+const adminEmailRoutes = require('./routes/adminEmail');
 const scheduler = require('./scheduler');
+const emailService = require('./services/emailService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -35,6 +38,8 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/archive', archiveRoutes);
+app.use('/api/email', emailRoutes);
+app.use('/api/admin', adminEmailRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -60,10 +65,14 @@ async function startServer() {
     app.set('db', db.getDb());
     app.set('saveDatabase', db.saveDatabase);
     
-    app.listen(PORT, () => {
+    app.listen(PORT, async () => {
         console.log(`🚀 Server is running on http://localhost:${PORT}`);
         console.log(`📦 API available at http://localhost:${PORT}/api`);
         console.log(`🔐 Admin portal at http://localhost:${PORT}/admin.html`);
+        
+        // Initialize email service
+        await emailService.initializeTransporter();
+        console.log(`📧 Email service initialized`);
         
         // Start the archive scheduler
         scheduler.startScheduler(60); // Run every 60 minutes

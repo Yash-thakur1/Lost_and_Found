@@ -1086,6 +1086,8 @@ function switchProfileTab(tabName) {
         loadMyClaims();
     } else if (tabName === 'archived') {
         loadMyArchivedItems();
+    } else if (tabName === 'settings') {
+        loadEmailPreferences();
     }
 }
 
@@ -1139,6 +1141,73 @@ async function restoreItem(itemId) {
         showToast(error.message || 'Failed to restore item', 'error');
     }
 }
+
+// ============================================
+// Email Preferences Functions
+// ============================================
+
+async function loadEmailPreferences() {
+    try {
+        const response = await fetch('/api/email/preferences', {
+            headers: {
+                'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const prefs = data.preferences;
+            
+            document.getElementById('emailClaims').checked = prefs.claims;
+            document.getElementById('emailMatches').checked = prefs.matches;
+            document.getElementById('emailExpiry').checked = prefs.expiry;
+            document.getElementById('emailNewsletter').checked = prefs.newsletter;
+            document.getElementById('emailDigest').value = prefs.digest || 'instant';
+        }
+    } catch (error) {
+        console.error('Failed to load email preferences:', error);
+    }
+}
+
+async function saveEmailPreferences(e) {
+    e.preventDefault();
+    
+    const preferences = {
+        claims: document.getElementById('emailClaims').checked,
+        matches: document.getElementById('emailMatches').checked,
+        expiry: document.getElementById('emailExpiry').checked,
+        newsletter: document.getElementById('emailNewsletter').checked,
+        digest: document.getElementById('emailDigest').value
+    };
+    
+    try {
+        const response = await fetch('/api/email/preferences', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+            },
+            body: JSON.stringify(preferences)
+        });
+        
+        if (response.ok) {
+            showToast('Email preferences saved!', 'success');
+        } else {
+            const error = await response.json();
+            showToast(error.error || 'Failed to save preferences', 'error');
+        }
+    } catch (error) {
+        showToast('Failed to save email preferences', 'error');
+    }
+}
+
+// Initialize email preferences form
+document.addEventListener('DOMContentLoaded', () => {
+    const emailForm = document.getElementById('emailPreferencesForm');
+    if (emailForm) {
+        emailForm.addEventListener('submit', saveEmailPreferences);
+    }
+});
 
 // Archive view toggle
 let isArchiveView = false;

@@ -825,6 +825,64 @@
 
                 <!-- Settings Tab -->
                 <div class="profile-tab-content" id="tab-settings">
+                    <!-- Email Notifications Section -->
+                    <form id="emailPreferencesForm" class="settings-form">
+                        <h4><i class="fas fa-envelope"></i> Email Notifications</h4>
+                        <div class="toggle-group">
+                            <label class="toggle-label">
+                                <span><i class="fas fa-hand-paper"></i> Claim Alerts</span>
+                                <span class="toggle-desc">Get notified when someone claims your items</span>
+                            </label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="emailClaims" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-group">
+                            <label class="toggle-label">
+                                <span><i class="fas fa-check-circle"></i> Claim Status Updates</span>
+                                <span class="toggle-desc">Get notified when your claims are approved/rejected</span>
+                            </label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="emailMatches" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-group">
+                            <label class="toggle-label">
+                                <span><i class="fas fa-clock"></i> Expiry Warnings</span>
+                                <span class="toggle-desc">Get warned when your items are about to expire</span>
+                            </label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="emailExpiry" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-group">
+                            <label class="toggle-label">
+                                <span><i class="fas fa-newspaper"></i> Newsletter</span>
+                                <span class="toggle-desc">Receive news and updates from Campus Lost & Found</span>
+                            </label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="emailNewsletter" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-envelope-open-text"></i> Email Digest Frequency</label>
+                            <select id="emailDigest" class="form-select">
+                                <option value="instant">Instant (Send immediately)</option>
+                                <option value="daily">Daily Digest</option>
+                                <option value="weekly">Weekly Digest</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Save Email Preferences
+                        </button>
+                    </form>
+
+                    <div class="settings-divider"></div>
+
                     <form id="passwordForm" class="settings-form">
                         <h4><i class="fas fa-key"></i> Change Password</h4>
                         <div class="form-group">

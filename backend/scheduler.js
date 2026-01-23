@@ -3,6 +3,7 @@
 // ============================================
 
 const { db, saveDatabase } = require('./database');
+const emailService = require('./services/emailService');
 
 // Get archive settings from database
 function getArchiveSettings() {
@@ -63,23 +64,25 @@ function initializeExpiryDates() {
 }
 
 // Auto-archive expired items
-function autoArchiveExpiredItems() {
+async function autoArchiveExpiredItems() {
     try {
         const now = new Date().toISOString();
 
         // Get items that have expired and are not already archived
         const expiredItems = db.prepare(`
-            SELECT id, name, user_id FROM items 
-            WHERE expires_at IS NOT NULL 
-            AND expires_at < ?
-            AND is_archived = 0
-            AND status NOT IN ('claimed', 'returned')
+            SELECT i.id, i.name, i.user_id, u.name as owner_name, u.email as owner_email
+            FROM items i
+            JOIN users u ON i.user_id = u.id
+            WHERE i.expires_at IS NOT NULL 
+            AND i.expires_at < ?
+            AND i.is_archived = 0
+            AND i.status NOT IN ('claimed', 'returned')
         `).all(now);
 
         if (expiredItems.length > 0) {
             console.log(`📦 Auto-archiving ${expiredItems.length} expired items...`);
             
-            expiredItems.forEach(item => {
+            for (const item of expiredItems) {
                 // Archive the item
                 db.prepare(`
                     UPDATE items 
@@ -101,12 +104,16 @@ function autoArchiveExpiredItems() {
                     item.id
                 );
 
+                // Send email notification
+                const owner = { id: item.user_id, name: item.owner_name, email: item.owner_email };
+                await emailService.sendArchivedNotification(owner, { id: item.id, name: item.name });
+
                 // Log activity
                 db.prepare(`
                     INSERT INTO activity_log (type, message, user_id, item_id)
                     VALUES (?, ?, ?, ?)
                 `).run('auto_archived', `Item auto-archived: ${item.name}`, item.user_id, item.id);
-            });
+            }
 
             saveDatabase();
             console.log(`✅ Auto-archived ${expiredItems.length} items!`);
@@ -120,28 +127,30 @@ function autoArchiveExpiredItems() {
 }
 
 // Send expiry warning notifications
-function sendExpiryWarnings() {
+async function sendExpiryWarnings() {
     try {
         const settings = getArchiveSettings();
         const warningDays = settings.expiry_warning_days || 7;
 
         // Get items expiring soon that haven't been notified
         const expiringItems = db.prepare(`
-            SELECT id, name, user_id, expires_at,
-                   julianday(expires_at) - julianday('now') as days_until_expiry
-            FROM items 
-            WHERE expires_at IS NOT NULL 
-            AND julianday(expires_at) - julianday('now') <= ?
-            AND julianday(expires_at) - julianday('now') > 0
-            AND is_archived = 0
-            AND expiry_notified = 0
-            AND status NOT IN ('claimed', 'returned')
+            SELECT i.id, i.name, i.user_id, i.expires_at,
+                   julianday(i.expires_at) - julianday('now') as days_until_expiry,
+                   u.name as owner_name, u.email as owner_email
+            FROM items i
+            JOIN users u ON i.user_id = u.id
+            WHERE i.expires_at IS NOT NULL 
+            AND julianday(i.expires_at) - julianday('now') <= ?
+            AND julianday(i.expires_at) - julianday('now') > 0
+            AND i.is_archived = 0
+            AND i.expiry_notified = 0
+            AND i.status NOT IN ('claimed', 'returned')
         `).all(warningDays);
 
         if (expiringItems.length > 0) {
             console.log(`⚠️ Sending expiry warnings for ${expiringItems.length} items...`);
             
-            expiringItems.forEach(item => {
+            for (const item of expiringItems) {
                 const daysLeft = Math.ceil(item.days_until_expiry);
 
                 // Create notification for item owner
@@ -156,9 +165,14 @@ function sendExpiryWarnings() {
                     item.id
                 );
 
+                // Send email notification
+                const owner = { id: item.user_id, name: item.owner_name, email: item.owner_email };
+                const itemData = { id: item.id, name: item.name, expires_at: item.expires_at };
+                await emailService.sendExpiryWarning(owner, itemData, daysLeft);
+
                 // Mark as notified
                 db.prepare('UPDATE items SET expiry_notified = 1 WHERE id = ?').run(item.id);
-            });
+            }
 
             saveDatabase();
             console.log(`✅ Sent ${expiringItems.length} expiry warnings!`);
@@ -172,11 +186,14 @@ function sendExpiryWarnings() {
 }
 
 // Run all scheduled tasks
-function runScheduledTasks() {
+async function runScheduledTasks() {
     console.log('🕐 Running scheduled archive tasks...');
     
-    const archived = autoArchiveExpiredItems();
-    const warnings = sendExpiryWarnings();
+    const archived = await autoArchiveExpiredItems();
+    const warnings = await sendExpiryWarnings();
+    
+    // Process email queue for digest emails
+    await emailService.processEmailQueue();
     
     console.log(`📊 Scheduled tasks complete: ${archived} archived, ${warnings} warnings sent`);
     

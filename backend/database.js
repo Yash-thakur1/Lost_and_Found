@@ -157,6 +157,70 @@ async function initialize() {
         exec(`ALTER TABLE items ADD COLUMN extension_count INTEGER DEFAULT 0`);
     } catch (e) { /* Column already exists */ }
 
+    // Add email preference columns to users table
+    try {
+        exec(`ALTER TABLE users ADD COLUMN email_claims INTEGER DEFAULT 1`);
+    } catch (e) { /* Column already exists */ }
+    try {
+        exec(`ALTER TABLE users ADD COLUMN email_matches INTEGER DEFAULT 1`);
+    } catch (e) { /* Column already exists */ }
+    try {
+        exec(`ALTER TABLE users ADD COLUMN email_expiry INTEGER DEFAULT 1`);
+    } catch (e) { /* Column already exists */ }
+    try {
+        exec(`ALTER TABLE users ADD COLUMN email_newsletter INTEGER DEFAULT 1`);
+    } catch (e) { /* Column already exists */ }
+    try {
+        exec(`ALTER TABLE users ADD COLUMN email_digest TEXT DEFAULT 'instant'`);
+    } catch (e) { /* Column already exists */ }
+
+    // Email settings table (for admin configuration)
+    exec(`
+        CREATE TABLE IF NOT EXISTS email_settings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            setting_key TEXT UNIQUE NOT NULL,
+            setting_value TEXT NOT NULL,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    // Insert default email settings
+    const defaultEmailSettings = [
+        ['smtp_host', ''],
+        ['smtp_port', '587'],
+        ['smtp_user', ''],
+        ['smtp_pass', ''],
+        ['smtp_secure', 'false'],
+        ['from_email', 'noreply@campus-lf.com'],
+        ['from_name', 'Campus Lost & Found'],
+        ['email_enabled', 'false'],
+        ['digest_time', '09:00'],
+        ['digest_day', '1']
+    ];
+    
+    defaultEmailSettings.forEach(([key, value]) => {
+        try {
+            db.run(`INSERT OR IGNORE INTO email_settings (setting_key, setting_value) VALUES (?, ?)`, [key, value]);
+        } catch (e) { /* Already exists */ }
+    });
+
+    // Email queue table for digest emails
+    exec(`
+        CREATE TABLE IF NOT EXISTS email_queue (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            email_type TEXT NOT NULL,
+            subject TEXT NOT NULL,
+            body TEXT NOT NULL,
+            status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'sent', 'failed')),
+            scheduled_for DATETIME,
+            sent_at DATETIME,
+            error_message TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    `);
+
     // Archive settings table
     exec(`
         CREATE TABLE IF NOT EXISTS archive_settings (

@@ -2,6 +2,7 @@ const express = require('express');
 const { db, saveDatabase } = require('../database');
 const { authenticateToken, optionalAuth } = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const emailService = require('../services/emailService');
 
 const router = express.Router();
 
@@ -282,7 +283,7 @@ router.delete('/:id', authenticateToken, (req, res) => {
 });
 
 // Claim an item
-router.post('/:id/claim', authenticateToken, (req, res) => {
+router.post('/:id/claim', authenticateToken, async (req, res) => {
     try {
         const { message } = req.body;
         const itemId = req.params.id;
@@ -298,6 +299,9 @@ router.post('/:id/claim', authenticateToken, (req, res) => {
         if (existingClaim) {
             return res.status(400).json({ error: 'You have already claimed this item.' });
         }
+
+        // Get claimer info
+        const claimer = db.prepare('SELECT name, email FROM users WHERE id = ?').get(req.user.id);
 
         // Create claim
         const result = db.prepare(`
@@ -316,6 +320,12 @@ router.post('/:id/claim', authenticateToken, (req, res) => {
             `Someone has claimed your ${item.status} item: ${item.name}`,
             itemId
         );
+
+        // Get item owner info and send email notification
+        const owner = db.prepare('SELECT id, name, email FROM users WHERE id = ?').get(item.user_id);
+        if (owner) {
+            emailService.sendClaimNotification(owner, item, claimer, message || '');
+        }
 
         // Log activity
         db.prepare(`
@@ -336,13 +346,13 @@ router.post('/:id/claim', authenticateToken, (req, res) => {
 });
 
 // Approve/Reject claim
-router.put('/claims/:claimId', authenticateToken, (req, res) => {
+router.put('/claims/:claimId', authenticateToken, async (req, res) => {
     try {
         const { status } = req.body; // 'approved' or 'rejected'
         const claimId = req.params.claimId;
 
         const claim = db.prepare(`
-            SELECT c.*, i.user_id as item_owner_id, i.name as item_name
+            SELECT c.*, i.user_id as item_owner_id, i.name as item_name, i.id as item_id
             FROM claims c
             JOIN items i ON c.item_id = i.id
             WHERE c.id = ?
@@ -376,6 +386,13 @@ router.put('/claims/:claimId', authenticateToken, (req, res) => {
             `Your claim for ${claim.item_name} has been ${status}.`,
             claim.item_id
         );
+
+        // Send email notification to claimer
+        const claimer = db.prepare('SELECT id, name, email FROM users WHERE id = ?').get(claim.user_id);
+        const item = db.prepare('SELECT * FROM items WHERE id = ?').get(claim.item_id);
+        if (claimer && item) {
+            emailService.sendClaimStatusUpdate(claimer, item, status);
+        }
         
         saveDatabase();
 
